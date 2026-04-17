@@ -10,11 +10,11 @@ export default function Painel() {
       <aside className="w-64 bg-slate-900 text-white p-6 hidden md:block">
         <div className="mb-10">
           <Image
-            src="/images/LOGO ACADEMIA LETRAS BARÃO..png"
-            alt="Logo"
+            src="/images/logo.png"
+            alt="Academia de Letras"
             width={120}
             height={40}
-            className="filter invert brightness-0"
+            className="w-auto h-10 object-contain mx-auto"
           />
         </div>
         <nav className="space-y-4">

@@ -22,7 +22,7 @@ export default function Header() {
         {/* Lado Esquerdo - Logo e Texto */}
         <Link href="/" className="flex items-center space-x-3 group">
           <Image
-            src="/images/LOGO ACADEMIA LETRAS BARÃO..png"
+            src="/images/logo.png"
             alt="Academia de Letras"
             width={180}
             height={80}

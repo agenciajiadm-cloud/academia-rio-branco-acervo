@@ -46,7 +46,7 @@ export default function Sobre() {
           </div>
           <div className="md:w-1/2 w-full h-[400px] relative rounded-lg overflow-hidden shadow-2xl">
             <Image 
-              src="/images/CAPA PENSAMENTOS NA ESCURIDÃO FINAL.png" 
+              src="/images/capa-pensamentos.png" 
               alt="Pensamentos na Escuridão" 
               fill 
               className="object-cover"
