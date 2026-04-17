@@ -4,6 +4,13 @@ import { books, authors } from "@/data/mock";
 import { ChevronLeft, ShoppingCart, Lock } from "lucide-react";
 import { notFound } from "next/navigation";
 
+// Necessário para fazer o deploy estático em hospedagens limitadas como Hostinger
+export function generateStaticParams() {
+  return books.map((book) => ({
+    id: book.id,
+  }));
+}
+
 // Utilizando página server-side para renderização amigável de e-commerce
 export default async function LivroPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
