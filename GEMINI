@@ -1,0 +1,203 @@
+# CSS para o estilo "Legal Design" da JI
+css_style = """
+@page {
+    size: A4;
+    margin: 0;
+    background-color: #ffffff;
+}
+
+body {
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+}
+
+.page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    page-break-after: always;
+    overflow: hidden;
+}
+
+/* Header Estilo JI */
+.header-bar {
+    background-color: #ff6700; /* Laranja Xiaomi */
+    height: 15mm;
+    width: 100%;
+}
+
+.content {
+    padding: 20mm;
+}
+
+h1 {
+    font-size: 28pt;
+    font-weight: bold;
+    color: #000000;
+    margin-bottom: 5mm;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+}
+
+h2 {
+    font-size: 18pt;
+    color: #ff6700;
+    border-left: 5px solid #ff6700;
+    padding-left: 10px;
+    margin-top: 15mm;
+}
+
+.highlight-box {
+    background-color: #f4f4f4;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.check-item {
+    margin: 8px 0;
+    display: block;
+}
+
+.check-icon {
+    color: #ff6700;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.locked-item {
+    color: #888;
+    font-style: italic;
+    border: 1px dashed #ccc;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.footer {
+    position: absolute;
+    bottom: 10mm;
+    left: 20mm;
+    right: 20mm;
+    font-size: 9pt;
+    color: #666;
+    border-top: 1px solid #eee;
+    padding-top: 5mm;
+}
+
+.signature-space {
+    margin-top: 20mm;
+    width: 100%;
+}
+
+.sig-block {
+    display: inline-block;
+    width: 45%;
+    vertical-align: top;
+    margin-right: 4%;
+}
+
+.sig-line {
+    border-top: 1px solid #000;
+    margin-top: 15mm;
+    padding-top: 2mm;
+    font-size: 10pt;
+}
+
+.tag-ji {
+    background: #000;
+    color: #fff;
+    padding: 2px 8px;
+    font-size: 8pt;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+"""
+
+html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <style>{css_style}</style>
+</head>
+<body>
+
+<div class="page">
+    <div class="header-bar"></div>
+    <div class="content">
+        <div class="tag-ji">AGÊNCIA JI | AI FIRST</div>
+        <h1>Proposta<br>Estratégica</h1>
+        <p><strong>Projeto:</strong> Plataforma Digital Acervo Next-Gen<br>
+        <strong>Cliente:</strong> Academia de Letras</p>
+
+        <h2>O Conceito Visual</h2>
+        <p>Desenvolvimento baseado na estética de elite <em>(Tubik Studio/Nike)</em>. Foco em tipografia clássica para autoridade e fluidez mobile para conversão imediata.</p>
+
+        <h2>Escopo do MVP (Entrega em 15 Dias)</h2>
+        <div class="highlight-box">
+            <div class="check-item"><span class="check-icon">✓</span> <strong>Design de Alta Costura:</strong> Node.js + React (Next.js) para SEO/GEO agressivo.</div>
+            <div class="check-item"><span class="check-icon">✓</span> <strong>Vitrine de Prestígio:</strong> Home, Catálogo Dinâmico e Páginas de Autores.</div>
+            <div class="check-item"><span class="check-icon">✓</span> <strong>Motor de Vendas:</strong> Integração nativa com Checkout Mercado Pago.</div>
+            <div class="check-item"><span class="check-icon">✓</span> <strong>Painel Administrativo:</strong> Gestão de uploads, preços e metadados.</div>
+            <div class="check-item"><span class="check-icon">✓</span> <strong>Bibliotecário Virtual:</strong> Chat inteligente (Groq API) treinado na base da Academia.</div>
+        </div>
+
+        <h2>Próximos Passos (Gatilho de Expansão)</h2>
+        <div class="locked-item">
+            <strong>🔒 Módulo Omnichannel:</strong> Sincronização com Amazon e Mercado Livre. 
+            <br><small>Disponível mediante upgrade de infraestrutura após lançamento do MVP.</small>
+        </div>
+    </div>
+    <div class="footer">JI Agencia LTDA | CNPJ 64.132.212/0001-05 | jiagency.co</div>
+</div>
+
+<div class="page">
+    <div class="header-bar"></div>
+    <div class="content">
+        <div class="tag-ji">DOCUMENTO DE PARCERIA DIGITAL</div>
+        <h1>Contrato de<br>Evolução</h1>
+        
+        <div style="font-size: 10pt; margin-bottom: 10mm;">
+            <strong>CONTRATADA:</strong> JI AGENCIA LTDA | CNPJ 64.132.212/0001-05 | Itapema, SC.<br>
+            <strong>CONTRATANTE:</strong> [NOME DA ACADEMIA/LIVRARIA] | CNPJ [00.000.000/0000-00].
+        </div>
+
+        <h2>1. Objetivo</h2>
+        <p>Criação e publicação da plataforma "Acervo Next-Gen" conforme escopo técnico do MVP aprovado.</p>
+
+        <h2>2. Investimento e Prazos</h2>
+        <div class="highlight-box">
+            <p><strong>Valor Total:</strong> R$ 1.500,00</p>
+            <p><strong>Sinal (Início):</strong> R$ 750,00 (Via Boleto Cora/PIX)</p>
+            <p><strong>Finalização (Deploy):</strong> R$ 750,00 (No 15º dia após o sinal)</p>
+            <p><strong>Prazo de Entrega:</strong> 15 dias úteis após recebimento de materiais.</p>
+        </div>
+
+        <h2>3. Cláusulas Inteligentes</h2>
+        <p><strong>Infraestrutura:</strong> Custos de domínio e hospedagem são de responsabilidade do contratante.</p>
+        <p><strong>Propriedade:</strong> O código e o site pertencem ao contratante após a liquidação total.</p>
+        <p><strong>Rescisão:</strong> O valor do sinal cobre os custos iniciais e não é reembolsável em caso de desistência após o dia 03.</p>
+
+        <div class="signature-space">
+            <div class="sig-block">
+                <div class="sig-line"><strong>Tiago Rodrigues Campana</strong><br>JI AGENCIA LTDA (Sócio-Administrador)</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"><strong>CONTRATANTE</strong><br>Pelo Representante Legal</div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">Este documento utiliza princípios de Visual Law para facilitar o entendimento entre as partes.</div>
+</div>
+
+</body>
+</html>
+"""
+
+output_html = "Proposta_e_Contrato_JI_2030.html"
+with open(output_html, "w", encoding="utf-8") as f:
+    f.write(html_content)
+print(f"Sucesso! Abra o arquivo {output_html} no seu navegador e salve como PDF (Cmd + P).")
