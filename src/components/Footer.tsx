@@ -22,6 +22,8 @@ export default function Footer() {
           <ul className="space-y-3 text-sm text-gray-400">
             <li><Link href="/sobre" className="hover:text-white transition-colors">Nossa História</Link></li>
             <li><Link href="/autores" className="hover:text-white transition-colors">Imortais & Autores</Link></li>
+            <li><Link href="/palestras" className="hover:text-white transition-colors">Contrate Palestras</Link></li>
+            <li><Link href="/contato" className="hover:text-white transition-colors">Contato</Link></li>
             <li><Link href="/login" className="hover:text-white transition-colors">Área do Associado</Link></li>
           </ul>
         </div>
@@ -36,7 +38,7 @@ export default function Footer() {
       </div>
       
       <div className="container mx-auto px-4 md:px-12 pt-8 border-t border-gray-800 text-center flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
-        <p>© 2030 Academia de Letras. Todos os direitos reservados.</p>
+        <p>© 2026 Academia de Letras Barão do Rio Branco. Todos os direitos reservados.</p>
         <p className="mt-4 md:mt-0">Desenvolvido com tecnologia <span className="font-bold text-white">Agência JI</span></p>
       </div>
     </footer>

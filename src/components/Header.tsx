@@ -46,6 +46,12 @@ export default function Header() {
           <Link href="/sobre" className="hover:text-brand hover:underline underline-offset-4 transition-colors">
             Sobre
           </Link>
+          <Link href="/palestras" className="hover:text-brand hover:underline underline-offset-4 transition-colors">
+            Palestras
+          </Link>
+          <Link href="/contato" className="hover:text-brand hover:underline underline-offset-4 transition-colors">
+            Contato
+          </Link>
         </nav>
 
         {/* Lado Direito - Ações */}
