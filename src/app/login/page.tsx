@@ -4,7 +4,7 @@ import { ArrowRight, Lock } from "lucide-react";
 
 export default function Login() {
   return (
-    <div className="bg-gray-50 min-h-screen flex items-center justify-center pt-20 px-4">
+    <div className="bg-gray-50 min-h-screen flex items-center justify-center pt-32 px-4 pb-24">
       <div className="bg-white p-8 md:p-12 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
         
         <div className="flex justify-center mb-8">

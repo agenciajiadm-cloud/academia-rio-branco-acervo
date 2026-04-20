@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 export default function Sobre() {
   return (
-    <div className="bg-white min-h-screen pt-24 pb-16">
+    <div className="bg-white min-h-screen pt-32 pb-24">
       {/* Header da Página */}
       <div className="container mx-auto px-6 md:px-12 mb-16 text-center">
         <motion.h1 
