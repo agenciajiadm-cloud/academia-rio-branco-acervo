@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Author } from "@/data/mock";
+import Link from "next/link";
 
 interface Props {
   author: Author;
@@ -9,8 +10,8 @@ interface Props {
 
 export default function AuthorCard({ author }: Props) {
   return (
-    <div className="flex flex-col items-center min-w-[120px] md:min-w-[150px] flex-shrink-0 cursor-pointer group">
-      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-4 border-2 border-transparent group-hover:border-accent transition-all duration-300">
+    <Link href={`/autor/${author.id}`} className="flex flex-col items-center min-w-[120px] md:min-w-[150px] flex-shrink-0 cursor-pointer group">
+      <div className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-4 border-2 border-transparent group-hover:border-black transition-all duration-300">
         <Image
           src={author.photoUrl}
           alt={author.name}
@@ -22,6 +23,6 @@ export default function AuthorCard({ author }: Props) {
       <h4 className="font-serif font-bold text-lg text-center group-hover:text-accent transition-colors">
         {author.name}
       </h4>
-    </div>
+    </Link>
   );
 }

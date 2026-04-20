@@ -1,82 +1,53 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, Lock } from "lucide-react";
 
 export default function Login() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(false);
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email === "teste@ji.com" && password === "123") {
-      router.push("/painel");
-    } else {
-      setError(true);
-    }
-  };
-
   return (
-    <div className="flex min-h-screen bg-white pt-20">
-      {/* Esquerda - Imagem Abstrata */}
-      <div className="hidden lg:block lg:w-1/2 relative bg-gray-100">
-        <Image
-          src="/images/CAPA PENSAMENTOS NA ESCURIDÃO FINAL.png"
-          alt="Abstract Literary"
-          fill
-          className="object-cover opacity-80"
-        />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-          <h2 className="text-white text-4xl font-serif font-bold text-center px-12">
-            A porta de entrada<br />para a imortalidade literária.
-          </h2>
+    <div className="bg-gray-50 min-h-screen flex items-center justify-center pt-20 px-4">
+      <div className="bg-white p-8 md:p-12 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+        
+        <div className="flex justify-center mb-8">
+          <div className="w-16 h-16 bg-black rounded-lg flex items-center justify-center">
+             <Lock className="w-8 h-8 text-white" />
+          </div>
         </div>
-      </div>
 
-      {/* Direita - Formulário */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="max-w-md w-full">
-          <h1 className="text-3xl font-serif font-bold text-black mb-2">Acesso Privado</h1>
-          <p className="text-gray-500 mb-8">Faça login com suas credenciais de associado.</p>
+        <h1 className="text-2xl font-serif font-bold text-center text-black mb-2">Restrito aos Associados</h1>
+        <p className="text-gray-500 text-center mb-8 text-sm">
+          Painel exclusivo para Autores, Imortais e Diretoria operarem suas palestras e obras.
+        </p>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-              <input
-                type="email"
-                required
-                className="w-full border-b-2 border-gray-300 focus:border-brand outline-none py-2 transition-colors bg-transparent"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+        <form className="space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">E-mail Institucional</label>
+            <input 
+              type="email" 
+              className="w-full border border-gray-300 rounded-md p-4 focus:ring-black focus:border-black outline-none bg-gray-50" 
+              placeholder="autor@academiariobranco.com.br"
+              defaultValue="policarpo@academiariobranco.com.br" 
+            />
+          </div>
+
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-sm font-bold text-gray-700">Senha</label>
+              <a href="#" className="text-xs text-brand hover:underline">Esqueceu a senha?</a>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-              <input
-                type="password"
-                required
-                className="w-full border-b-2 border-gray-300 focus:border-brand outline-none py-2 transition-colors bg-transparent"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            <input 
+              type="password" 
+              className="w-full border border-gray-300 rounded-md p-4 focus:ring-black focus:border-black outline-none bg-gray-50" 
+              placeholder="••••••••" 
+              defaultValue="123456"
+            />
+          </div>
 
-            {error && (
-              <p className="text-red-500 text-sm font-medium">Credenciais Inválidas</p>
-            )}
+          <Link href="/area-associado" className="mt-8 w-full flex items-center justify-center space-x-2 bg-black text-white px-8 py-4 font-bold rounded-sm hover:bg-zinc-800 transition-colors">
+            <span>Acessar Painel (BETA)</span>
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </form>
 
-            <button
-              type="submit"
-              className="w-full bg-brand text-white py-4 font-bold text-lg hover:bg-accent transition-colors shadow-lg hover:shadow-accent/30 rounded-sm mt-4"
-            >
-              Acessar Acervo
-            </button>
-          </form>
-        </div>
       </div>
     </div>
   );
