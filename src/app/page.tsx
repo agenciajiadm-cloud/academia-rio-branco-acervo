@@ -129,18 +129,6 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* FAB - Bibliotecário Virtual */}
-      <motion.button 
-        className="fixed bottom-8 right-8 bg-brand text-white p-4 rounded-full shadow-2xl hover:bg-accent transition-all duration-300 z-50 group flex items-center space-x-2"
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", delay: 1 }}
-      >
-        <MessageSquare className="w-6 h-6" />
-        <span className="max-w-0 overflow-hidden whitespace-nowrap group-hover:max-w-xs transition-all duration-500 ease-in-out font-medium">
-          Falar com a Curadoria
-        </span>
-      </motion.button>
     </div>
   );
 }

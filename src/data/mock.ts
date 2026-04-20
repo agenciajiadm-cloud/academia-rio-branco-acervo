@@ -1,3 +1,8 @@
+import autoresData from "./autores.json";
+import livrosData from "./livros.json";
+import musicasData from "./musicas.json";
+import categoriasData from "./categorias.json";
+
 export interface Author {
   id: string;
   name: string;
@@ -5,6 +10,8 @@ export interface Author {
   fullHistory?: string;
   photoUrl: string;
   instagramHandle?: string;
+  cidade?: string;
+  cadeira?: string;
 }
 
 export interface Book {
@@ -17,79 +24,45 @@ export interface Book {
   description?: string;
 }
 
-export const authors: Author[] = [
-  {
-    id: "a1",
-    name: "José Policarpo M. Junior",
-    bio: "Pintor, fotógrafo, pesquisador e autor inspirador.",
-    fullHistory: "Nascido em 27/12/1969 em Belém do Pará é escritor, pintor, fotógrafo e pesquisador. Engenheiro Florestal, Doutor em Biotecnologia e Biodiversidade pela UNIFAP. Membro da Academia Maçônica Amapaense de Letras, Presidente da Academia de Letras Barão do Rio Branco. Além de docente, lidera projetos sociais através do esporte.",
-    photoUrl: "/images/policarpo.png",
-    instagramHandle: "@policarpo.mr",
-  }
-];
+export interface Music {
+  id: string;
+  title: string;
+  coverUrl: string;
+  authorId: string;
+}
 
-export const books: Book[] = [
-  {
-    id: "b1",
-    title: "O Forte",
-    subtitle: "A defesa de um império",
-    price: 49.90,
-    coverUrl: "/images/capa-forte.png",
-    authorId: "a1",
-    description: "Uma imersão na cultura e na força dos defensores do nosso território. Obra de maturidade poética e política.",
-  },
-  {
-    id: "b2",
-    title: "Samurai de Carvão",
-    subtitle: "A honra nas chamas escurecidas",
-    price: 69.90,
-    coverUrl: "/images/capa-samurai.png",
-    authorId: "a1",
-    description: "Um mergulho denso no mundo distópico, onde a honra molda as espadas no limite da realidade moderna.",
-  },
-  {
-    id: "b3",
-    title: "Caipira",
-    subtitle: "A caminhada eterna do povo interiorano",
-    price: 59.90,
-    coverUrl: "/images/capa-caipira.png",
-    authorId: "a1",
-    description: "A aridez da terra e a magia caipira marcam este indiscutível sobre resistência cultural.",
-  },
-  {
-    id: "b4",
-    title: "Pensamentos na Escuridão",
-    subtitle: "A traição do destino",
-    price: 35.00,
-    coverUrl: "/images/capa-pensamentos.png",
-    authorId: "a1",
-    description: "Um convite poético a entender os labirintos do ciúme, da dúvida e da memória abstrata.",
-  },
-  {
-    id: "b5",
-    title: "A Vila",
-    subtitle: "Histórias do extremo Norte",
-    price: 39.90,
-    coverUrl: "/images/capa-vila.png",
-    authorId: "a1",
-    description: "Os mitos e vivências amazônicas recontados pela vivência intrínseca com os ribeirinhos.",
-  },
-  {
-    id: "b6",
-    title: "Passos Perdidos",
-    subtitle: "Onde terminam os caminhos",
-    price: 45.00,
-    coverUrl: "/images/capa-passos.png",
-    authorId: "a1",
-    description: "Uma obra investigativa e literária recheada de ação.",
-  },
-  {
-    id: "b7",
-    title: "Turminha",
-    subtitle: "O futuro nas entrelinhas (Crianças)",
-    price: 29.90,
-    coverUrl: "/images/capa-turminha.png",
-    authorId: "a1",
-    description: "A perspectiva encantadora das crianças e do aprendizado na primeira idade.",
-  }
-];
+export interface Category {
+  id: string;
+  name: string;
+}
+
+// Map the raw JSON representations to our application typing
+export const authors: Author[] = autoresData.map((a: any) => ({
+  id: a.id,
+  name: a.nome, // map 'nome' to 'name' for legacy compatibility
+  bio: a.bio,
+  fullHistory: a.fullHistory,
+  photoUrl: a.foto,
+  instagramHandle: a.instagram,
+  cidade: a.cidade,
+  cadeira: a.cadeira
+}));
+
+export const books: Book[] = livrosData.map((b: any) => ({
+  id: b.id,
+  title: b.title,
+  subtitle: b.subtitle,
+  price: b.price,
+  coverUrl: b.coverUrl,
+  authorId: b.autor_id, // ensure relationship matches the json property
+  description: b.description
+}));
+
+export const musics: Music[] = musicasData.map((m: any) => ({
+  id: m.id,
+  title: m.title,
+  coverUrl: m.coverUrl,
+  authorId: m.autor_id
+}));
+
+export const categories: Category[] = categoriasData as Category[];

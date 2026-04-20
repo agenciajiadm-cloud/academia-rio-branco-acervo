@@ -1,0 +1,38 @@
+[
+  {
+    "id": "m1",
+    "title": "Contos do Amapá Vol. 1",
+    "coverUrl": "https://ui-avatars.com/api/?name=Contos&background=244186&color=fff&size=512&font-size=0.33",
+    "autor_id": "placeholder"
+  },
+  {
+    "id": "m2",
+    "title": "Sons do Norte",
+    "coverUrl": "https://ui-avatars.com/api/?name=Sons&background=b08d57&color=fff&size=512&font-size=0.33",
+    "autor_id": "placeholder"
+  },
+  {
+    "id": "m3",
+    "title": "Vozes da Academia",
+    "coverUrl": "https://ui-avatars.com/api/?name=Vozes&background=000&color=fff&size=512&font-size=0.33",
+    "autor_id": "placeholder"
+  },
+  {
+    "id": "m4",
+    "title": "Memórias Literárias",
+    "coverUrl": "https://ui-avatars.com/api/?name=Memorias&background=244186&color=fff&size=512&font-size=0.33",
+    "autor_id": "placeholder"
+  },
+  {
+    "id": "m5",
+    "title": "Poesias Faladas",
+    "coverUrl": "https://ui-avatars.com/api/?name=Poesias&background=b08d57&color=fff&size=512&font-size=0.33",
+    "autor_id": "placeholder"
+  },
+  {
+    "id": "m6",
+    "title": "Encontros Culturais",
+    "coverUrl": "https://ui-avatars.com/api/?name=Encontros&background=000&color=fff&size=512&font-size=0.33",
+    "autor_id": "placeholder"
+  }
+]

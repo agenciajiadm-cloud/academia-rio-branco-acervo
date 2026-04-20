@@ -1,0 +1,65 @@
+[
+  {
+    "id": "b1",
+    "title": "O Forte",
+    "subtitle": "A defesa de um império",
+    "price": 49.90,
+    "coverUrl": "/images/capa-forte.png",
+    "autor_id": "policarpo",
+    "description": "Uma imersão na cultura e na força dos defensores do nosso território. Obra de maturidade poética e política."
+  },
+  {
+    "id": "b2",
+    "title": "Samurai de Carvão",
+    "subtitle": "A honra nas chamas escurecidas",
+    "price": 69.90,
+    "coverUrl": "/images/capa-samurai.png",
+    "autor_id": "policarpo",
+    "description": "Um mergulho denso no mundo distópico, onde a honra molda as espadas no limite da realidade moderna."
+  },
+  {
+    "id": "b3",
+    "title": "A Vila",
+    "subtitle": "Histórias do extremo Norte",
+    "price": 39.90,
+    "coverUrl": "/images/capa-vila.png",
+    "autor_id": "policarpo",
+    "description": "Os mitos e vivências amazônicas recontados pela vivência intrínseca com os ribeirinhos."
+  },
+  {
+    "id": "b4",
+    "title": "Pensamentos na Escuridão",
+    "subtitle": "A traição do destino",
+    "price": 35.00,
+    "coverUrl": "/images/capa-pensamentos.png",
+    "autor_id": "policarpo",
+    "description": "Um convite poético a entender os labirintos do ciúme, da dúvida e da memória abstrata."
+  },
+  {
+    "id": "b5",
+    "title": "Passos Perdidos",
+    "subtitle": "Onde terminam os caminhos",
+    "price": 45.00,
+    "coverUrl": "/images/capa-passos.png",
+    "autor_id": "policarpo",
+    "description": "Uma obra investigativa e literária recheada de ação."
+  },
+  {
+    "id": "b6",
+    "title": "Caipira",
+    "subtitle": "A caminhada eterna",
+    "price": 59.90,
+    "coverUrl": "/images/capa-caipira.png",
+    "autor_id": "policarpo",
+    "description": "A aridez da terra e a magia caipira."
+  },
+  {
+    "id": "b7",
+    "title": "Turminha",
+    "subtitle": "O futuro nas entrelinhas",
+    "price": 29.90,
+    "coverUrl": "/images/capa-turminha.png",
+    "autor_id": "policarpo",
+    "description": "A perspectiva encantadora das crianças e do aprendizado na primeira idade."
+  }
+]
