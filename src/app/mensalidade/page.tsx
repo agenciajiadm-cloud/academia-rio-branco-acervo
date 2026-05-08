@@ -7,7 +7,6 @@ import { CreditCard, RefreshCw, Check, AlertCircle, Shield } from "lucide-react"
 import { getMemberByCode, activateMember } from "@/lib/members";
 
 const MENSALIDADE_VALOR = 49.9;
-const MP_PUBLIC_KEY = process.env.NEXT_PUBLIC_MP_PUBLIC_KEY ?? "";
 
 function MensalidadeContent() {
   const searchParams = useSearchParams();
@@ -31,36 +30,14 @@ function MensalidadeContent() {
     setError("");
 
     try {
-      if (plan === "recorrente") {
-        // Mercado Pago Subscriptions — redireciona para checkout externo
-        const res = await fetch("/api/mp/subscription", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ memberCode: member.code, memberEmail: member.email }),
-        });
-        if (!res.ok) throw new Error("Erro ao criar assinatura");
-        const { init_point } = await res.json();
-        window.location.href = init_point;
-        return;
-      }
-
-      // Pagamento avulso mensal — Mercado Pago Checkout
-      const res = await fetch("/api/mp/preference", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ memberCode: member.code, memberEmail: member.email }),
-      });
-      if (!res.ok) throw new Error("Erro ao criar preferência de pagamento");
-      const { init_point } = await res.json();
-      window.location.href = init_point;
-    } catch (err: any) {
-      // Fallback em dev: ativa diretamente (remover em produção)
       if (process.env.NODE_ENV === "development") {
         activateMember(member.code);
         router.push("/area-associado");
         return;
       }
-      setError(err.message ?? "Erro ao processar pagamento");
+      setError(
+        "O pagamento online estará disponível em breve. Para ativar sua mensalidade agora, entre em contato pelo WhatsApp da Academia."
+      );
     } finally {
       setLoading(false);
     }
