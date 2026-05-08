@@ -27,8 +27,36 @@ export default function Sobre() {
       </div>
 
       <div className="container mx-auto px-6 md:px-12 space-y-24">
+
+        {/* Bloco 0 - FOTO DOS FUNDADORES (destaque em primeiro lugar) */}
+        <motion.div
+          className="relative w-full overflow-hidden rounded-2xl shadow-2xl"
+          initial={{ opacity: 0, scale: 0.97 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.9 }}
+        >
+          <div className="relative w-full h-[420px] md:h-[580px]">
+            <Image
+              src="/imagens/fundadores.jpeg"
+              alt="Fundadores da Academia de Letras Barão do Rio Branco"
+              fill
+              className="object-cover"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12 text-white">
+            <span className="text-accent font-bold uppercase tracking-widest text-xs md:text-sm mb-2 block">26 de Janeiro de 2025</span>
+            <h2 className="text-3xl md:text-5xl font-serif font-bold leading-tight">Os Fundadores</h2>
+            <p className="mt-3 text-gray-200 text-base md:text-lg max-w-2xl">
+              Foto histórica de fundação da Academia de Letras Barão do Rio Branco — Amapá, Brasil.
+            </p>
+          </div>
+        </motion.div>
+
         {/* Bloco 1 - Text Esquerda, Img Direita */}
-        <motion.div 
+        <motion.div
           className="flex flex-col md:flex-row items-center gap-12"
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -38,17 +66,17 @@ export default function Sobre() {
           <div className="md:w-1/2 space-y-6">
             <h2 className="text-3xl font-serif font-bold text-brand">A Origem</h2>
             <p className="text-gray-700 leading-relaxed text-lg">
-              A Academia de Letras Barão do Rio Branco – AP nasceu do encontro entre o idealismo e a paixão pela palavra. 
-              Sua semente foi plantada em novembro de 2024, durante um projeto de incentivo à leitura e à escrita realizado pela professora e escritora Maria Inês, 
-              cuja atuação educacional sempre esteve voltada à formação leitora e crítica. O evento contou com a participação especial do autor e professor Policarpo Junior, 
+              A Academia de Letras Barão do Rio Branco – AP nasceu do encontro entre o idealismo e a paixão pela palavra.
+              Sua semente foi plantada em novembro de 2024, durante um projeto de incentivo à leitura e à escrita realizado pela professora e escritora Maria Inês,
+              cuja atuação educacional sempre esteve voltada à formação leitora e crítica. O evento contou com a participação especial do autor e professor Policarpo Junior,
               convidado para compartilhar sua experiência com os alunos e demais participantes.
             </p>
           </div>
           <div className="md:w-1/2 w-full h-[400px] relative rounded-lg overflow-hidden shadow-2xl">
-            <Image 
-              src="/images/capa-pensamentos.png" 
-              alt="Pensamentos na Escuridão" 
-              fill 
+            <Image
+              src="/images/capa-pensamentos.png"
+              alt="Pensamentos na Escuridão"
+              fill
               className="object-cover"
             />
           </div>

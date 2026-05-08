@@ -1,12 +1,62 @@
 [
   {
     "id": "policarpo",
-    "nome": "José Policarpo M. Junior",
-    "foto": "/images/policarpo.png",
-    "instagram": "@policarpo.mr",
-    "bio": "Pintor, fotógrafo, pesquisador e autor inspirador.",
+    "nome": "José Policarpo Miranda Junior",
+    "foto": "/imagens/policarpo-novo.jpg",
+    "instagram": "https://www.instagram.com/policarpo.junior.311",
+    "bio": "Escritor, pintor, fotógrafo e pesquisador. Presidente da Academia de Letras Barão do Rio Branco.",
     "cidade": "Macapá, AP",
-    "fullHistory": "Nascido em 27/12/1969 em Belém do Pará é escritor, pintor, fotógrafo e pesquisador. Engenheiro Florestal, Doutor em Biotecnologia e Biodiversidade pela UNIFAP. Membro da Academia Maçônica Amapaense de Letras, Presidente da Academia de Letras Barão do Rio Branco. Além de docente, lidera projetos sociais através do esporte.",
-    "cadeira": "1 - Presidente"
+    "fullHistory": "Com atuação multifacetada, pesquisador, professor, gestor público, escritor e acadêmico, José Policarpo Miranda Junior construiu uma carreira marcada pelo comprometimento com a defesa ambiental, com a ciência e com a cultura. Nascido em 27/12/1969 em Belém do Pará, é Engenheiro Florestal, Doutor em Biotecnologia e Biodiversidade pela Universidade Federal do Amapá – UNIFAP, Pós Doutorado pelo PPIF/UNIFAP, Mestre em Ciências Florestais pela UFRA, Especialista em Ciências Políticas e Gestão Pública. Presidente da Academia de Letras Barão do Rio Branco e Diretor/CEO da empresa AMBIEX IND COM e SERVIÇOS LTDA. Sua obra, tanto científica quanto literária, contribui para o fortalecimento do pensamento amazônida e para a divulgação de saberes que valorizam a biodiversidade, a educação, a história e a identidade regional.",
+    "cadeira": "Patrono 01 — Presidente",
+    "titulacao": "Engenheiro Florestal, Esp. em Gestão de Cidades, Esp. em Ciências Políticas, Mestre em Manejo Florestal e Doutor em Biotecnologia e Biodiversidade",
+    "palestras": true
+  },
+  {
+    "id": "elaine-araujo",
+    "nome": "Elaine Araújo",
+    "foto": "/imagens/elaine-araujo.jpg",
+    "instagram": "https://www.instagram.com/elainearaujoferreira_tv",
+    "bio": "Professora Mestranda em Letras, compositora, poetisa e produtora cultural do Amapá.",
+    "cidade": "Santana, AP",
+    "fullHistory": "Professora Mestranda do curso de Letras, Literatura e Críticas Literárias da PUC-Goiás, Especialista em Docência do Ensino Superior pela Faculdade CETE. Graduada em Licenciatura em Pedagogia pelo IFPA e em Teologia pela FATECH. Presidente da Fundação de Cultura de Santana-Amapá de 2022 a 2023 e Vice-Presidente de 2023 a 2025. Jornalista Provisionada, Assessora de Comunicação Social do Teatro das Bacabeiras e da Escola Estadual de Música Valquiria Lima. Autora dos Hinos Municipais de Santana (1989) e do Município de Laranjal do Jari (1995) e do livro 'Dicionário Caboquês, a Língua do Cabuçu nas Brenhas da Amazônia'. Mediadora Judicial do TJAP e instrutora multiplicadora de Práticas Restaurativas.",
+    "cadeira": "Cadeira Castro Alves",
+    "titulacao": "Mestranda em Letras, Especialista em Docência Superior, Pedagoga",
+    "palestras": true
+  },
+  {
+    "id": "jacqueline-pharlan",
+    "nome": "Jacqueline Pharlan de Camargo",
+    "foto": "/imagens/jacqueline-pharlan.jpg",
+    "instagram": "https://www.instagram.com/jacquepharlan",
+    "bio": "Professora de inglês, Engenheira de Segurança do Trabalho, escritora e cicloativista com obras publicadas em âmbito nacional e internacional.",
+    "cidade": "Macapá, AP",
+    "fullHistory": "Jacqueline Pharlan de Camargo é professora de inglês, Engenheira de Segurança do Trabalho, escritora e cicloativista. Mestre em Educação com ênfase em gestão educacional e em Tecnologias Emergentes, graduada em Letras Português/Inglês e Engenharia de Produção. Tem livros publicados sobre Cicloturismo e desenvolvimento, poesias e contos em coletâneas, artigos Qualis A2, A4, B1 e B2. Participou de eventos e feiras culturais a nível nacional e internacional, como o Equinócio das Águas, a Folia Literária Internacional do Amapá e a 13ª Feira Internacional do Livro de Caiena na Guiana Francesa. Selecionada no edital do Festival Literário de Macapá (FLIMAC 2025) e das coletâneas do Mulherio das Letras do Amapá.",
+    "cadeira": "Patrono Ivo Cannuty — Cadeira 052",
+    "titulacao": "Mestre em Educação, Engenheira de Segurança do Trabalho, Licenciada em Letras e Engenharia de Produção",
+    "palestras": true
+  },
+  {
+    "id": "maria-lucia-coelho",
+    "nome": "Maria Lúcia Coelho",
+    "foto": "/imagens/maria-lucia-coelho.jpg",
+    "instagram": "",
+    "bio": "Escritora, poetisa, advogada, mestra em Comunicação e doutoranda em Educação, com obra literária nas categorias poemas, crônicas e contos.",
+    "cidade": "Macapá, AP",
+    "fullHistory": "Nascida em Afuá, Estado do Pará, começou a estudar aos 7 anos, tendo sido promovida para séries mais avançadas no mesmo ano. Aos 13 anos, já dava aulas para crianças da vizinhança. Atuou como professora de diversas séries do ensino fundamental, proferia palestras em faculdades e hoje é Mestra em Comunicação, Linguagens e Cultura e Doutoranda em Educação. Assistente Social, Advogada, Vereadora e Conselheira ao longo da sua trajetória. Autora do livro de poesias 'Sinfonia de Emoções', além de obras nas categorias crônicas e contos, alguns com destaque em competições nacionais. Seus ideais perpassam por uma trilha de produção que atende às aspirações sociais de conhecimentos, emoções e paz interior.",
+    "cadeira": "Patrono Maria Beatriz do Nascimento — Cadeira 51",
+    "titulacao": "Assistente Social, Advogada, Mestra em Comunicação, Doutoranda em Educação",
+    "palestras": true
+  },
+  {
+    "id": "mathias-alencar",
+    "nome": "Cesar Augusto Mathias de Alencar",
+    "foto": "/imagens/mathias-alencar.jpg",
+    "instagram": "https://www.instagram.com/mathiasdealencar",
+    "bio": "Poeta e professor de Filosofia. Doutor pela UFRJ, autor de três livros de poesia e um romance, carioca radicado às margens do Amazonas.",
+    "cidade": "Macapá, AP",
+    "fullHistory": "Mathias de Alencar é poeta e professor. Doutor em Filosofia pela UFRJ, é docente efetivo de Filosofia na Universidade Federal do Amapá e na pós-graduação da Universidade Federal do Pará. Carioca radicado às margens do Amazonas, recebeu seu primeiro prêmio literário no concurso Sweek Tomorrow (2017) pelo melhor conto escrito em língua portuguesa. É autor de três livros de poesia: 'Ninguém há de doar-se a dois amores ou Julieta' (2023), 'Poem(a)limpo' (2014/2024), 'Pá-Lavra' (2025), e de uma tradução de poemas de T. S. Eliot. Mantém coluna mensal na Revista literária O Zezeu e página no Substack. Seu primeiro romance, 'Bárbara', recebeu em 2025 uma edição especial comemorativa de 10 anos. Influenciado pela poesia teatral, desenvolve uma poética que ao mesmo tempo é narrativa e explora as imagens e sons das palavras como potências da experiência estética.",
+    "cadeira": "Patrono João Cabral de Melo Neto — Cadeira 50",
+    "titulacao": "Doutor em Filosofia (UFRJ), Professor Efetivo UNIFAP e UFPA",
+    "palestras": true
   }
 ]
