@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 import ScrollProgress from "@/components/ScrollProgress";
+import DemoBadge from "@/components/DemoBadge";
 
 export const metadata: Metadata = {
   title: "Acervo Next-Gen | Academia de Letras Barão do Rio Branco",
@@ -24,6 +25,7 @@ export default function RootLayout({
           <main className="flex-grow">{children}</main>
           <Footer />
         </SmoothScroll>
+        <DemoBadge />
       </body>
     </html>
   );
