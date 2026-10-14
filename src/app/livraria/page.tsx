@@ -9,8 +9,8 @@ export default function Livraria() {
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [books, setBooks] = useState<any[]>(mockBooks);
 
-  function syncBooks() {
-    const dbBooks = getBooks();
+  async function syncBooks() {
+    const dbBooks = await getBooks().catch((e) => { console.error(e); return []; });
     if (dbBooks.length > 0) {
       setBooks(
         dbBooks.map((b) => ({

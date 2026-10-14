@@ -58,8 +58,9 @@ export default function Home() {
   const [authorList, setAuthorList] = useState<any[]>(authors);
   const [musicList, setMusicList] = useState<any[]>(musics);
 
-  function syncData() {
-    const dbBooks = getBooks();
+  async function syncData() {
+    const [dbBooks, dbMembers, dbMusics] = await Promise.all([getBooks(), getMembers(), getMusics()])
+      .catch((e) => { console.error(e); return [[], [], []] as [DBBook[], DBMember[], DBMusic[]]; });
     if (dbBooks.length > 0) {
       setBookList(dbBooks.map(b => ({
         id: b.id,
@@ -72,7 +73,6 @@ export default function Home() {
       })));
     }
 
-    const dbMembers = getMembers();
     if (dbMembers.length > 0) {
       setAuthorList(dbMembers.map(m => ({
         id: m.id,
@@ -86,7 +86,6 @@ export default function Home() {
       })));
     }
 
-    const dbMusics = getMusics();
     if (dbMusics.length > 0) {
       setMusicList(dbMusics.map(m => ({
         id: m.id,

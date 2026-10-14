@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Database, Download, Upload, RefreshCw, AlertTriangle,
   CheckCircle, FileJson, Shield, ArrowRight, HardDrive
@@ -9,26 +9,31 @@ import {
   exportDatabaseBackup, importDatabaseBackup, resetToDefaultData,
   getMembers, getBooks, getMusics
 } from "@/lib/db";
+import { useDbSync } from "@/lib/useDbSync";
+import DbStatus from "@/components/DbStatus";
 
 export default function DiretorBackup() {
   const [counts, setCounts] = useState({ members: 0, books: 0, musics: 0 });
   const [importStatus, setImportStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
 
-  function reloadCounts() {
-    setCounts({
-      members: getMembers().length,
-      books: getBooks().length,
-      musics: getMusics().length,
-    });
-  }
+  const { loading, error } = useDbSync(async () => {
+    const [m, b, mu] = await Promise.all([
+      getMembers({ todos: true }),
+      getBooks({ todos: true }),
+      getMusics({ todos: true }),
+    ]);
+    setCounts({ members: m.length, books: b.length, musics: mu.length });
+  });
 
-  useEffect(() => {
-    reloadCounts();
-  }, []);
-
-  function handleExport() {
-    const json = exportDatabaseBackup();
+  async function handleExport() {
+    let json: string;
+    try {
+      json = await exportDatabaseBackup();
+    } catch (e) {
+      setImportStatus({ type: "error", message: "Erro ao exportar: " + (e as Error).message });
+      return;
+    }
     const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -43,12 +48,11 @@ export default function DiretorBackup() {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       const content = evt.target?.result as string;
-      const res = importDatabaseBackup(content);
+      const res = await importDatabaseBackup(content);
       if (res.success) {
         setImportStatus({ type: "success", message: res.message });
-        reloadCounts();
       } else {
         setImportStatus({ type: "error", message: res.message });
       }
@@ -56,15 +60,19 @@ export default function DiretorBackup() {
     reader.readAsText(file);
   }
 
-  function handleReset() {
-    resetToDefaultData();
-    reloadCounts();
+  async function handleReset() {
+    const res = await resetToDefaultData();
     setResetConfirm(false);
-    setImportStatus({ type: "success", message: "Dados restaurados com sucesso para os registros iniciais da Academia." });
+    setImportStatus(
+      res.success
+        ? { type: "success", message: "Dados restaurados com sucesso para os registros iniciais da Academia." }
+        : { type: "error", message: res.message }
+    );
   }
 
   return (
     <div className="p-4 md:p-8 max-w-[1200px] mx-auto">
+      <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3">

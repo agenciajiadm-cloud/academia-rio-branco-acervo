@@ -32,11 +32,15 @@ export default function Cadastro() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    const member = registerMember(form);
-    setCode(member.code);
-    setStep("success");
-    setLoading(false);
+    try {
+      const member = await registerMember(form);
+      setCode(member.code);
+      setStep("success");
+    } catch (err) {
+      alert("Não foi possível concluir o cadastro: " + (err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function copyCode() {

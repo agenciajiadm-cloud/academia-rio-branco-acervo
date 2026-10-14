@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ShoppingCart, Lock, ExternalLink, BookOpen } from "lucide-react";
-import { getBooks, getMembers, type DBBook, type DBMember } from "@/lib/db";
+import { getBookById, getMemberById } from "@/lib/db";
 
 interface LivroDetailClientProps {
   id: string;
@@ -29,9 +29,8 @@ export default function LivroDetailClient({ id, initialBook, initialAuthor }: Li
   const [author, setAuthor] = useState(initialAuthor);
   const [amazonUrl, setAmazonUrl] = useState<string | null>(null);
 
-  function syncData() {
-    const allBooks = getBooks();
-    const foundBook = allBooks.find((b) => b.id === id);
+  async function syncData() {
+    const foundBook = await getBookById(id).catch((e) => { console.error(e); return null; });
     if (foundBook) {
       setBook({
         id: foundBook.id,
@@ -46,8 +45,7 @@ export default function LivroDetailClient({ id, initialBook, initialAuthor }: Li
       const amz = (foundBook.linksVenda || []).find((l) => l.plataforma === "amazon")?.url;
       if (amz) setAmazonUrl(amz);
 
-      const allMembers = getMembers();
-      const foundMember = allMembers.find((m) => m.id === foundBook.memberId || m.code === foundBook.memberId);
+      const foundMember = await getMemberById(foundBook.memberId).catch(() => null);
       if (foundMember) {
         setAuthor({
           id: foundMember.id,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Download, Users, CheckCircle, Clock, XCircle, Search, Lock } from "lucide-react";
-import { getAllMembers, getMembersCSV, seedIfEmpty, type Member } from "@/lib/members";
+import { getAllMembers, getMembersCSV, type Member } from "@/lib/members";
 
 const ADMIN_CODE = "ADMIN2026";
 
@@ -16,8 +16,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (auth) {
-      seedIfEmpty();
-      setMembers(getAllMembers());
+      getAllMembers().then(setMembers, console.error);
     }
   }, [auth]);
 
@@ -31,8 +30,8 @@ export default function Admin() {
     }
   }
 
-  function downloadCSV() {
-    const csv = getMembersCSV();
+  async function downloadCSV() {
+    const csv = await getMembersCSV();
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

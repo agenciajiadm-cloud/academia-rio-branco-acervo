@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CreditCard, RefreshCw, Check, AlertCircle, Shield } from "lucide-react";
-import { getMemberByCode, activateMember } from "@/lib/members";
+import { getMemberByCode, activateMember, type Member } from "@/lib/members";
 
 const MENSALIDADE_VALOR = 49.9;
 
@@ -12,15 +12,14 @@ function MensalidadeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get("code") ?? "";
-  const [member, setMember] = useState<ReturnType<typeof getMemberByCode>>(null);
+  const [member, setMember] = useState<Member | null>(null);
   const [plan, setPlan] = useState<"mensal" | "recorrente">("mensal");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (code) {
-      const m = getMemberByCode(code);
-      setMember(m);
+      getMemberByCode(code).then(setMember, () => setMember(null));
     }
   }, [code]);
 
@@ -31,7 +30,7 @@ function MensalidadeContent() {
 
     try {
       if (process.env.NODE_ENV === "development") {
-        activateMember(member.code);
+        await activateMember(member.code);
         router.push("/area-associado");
         return;
       }

@@ -52,9 +52,28 @@ export default function AreaAssociado() {
   const anyModal = profileOpen || bookModal.open || musicModal.open;
   useScrollLock(anyModal);
 
-  function reload(m: Member) {
-    setBooks(getBooksByMember(m.id));
-    setMusics(getMusicsByMember(m.id));
+  async function reload(m: Member) {
+    try {
+      const [b, mu] = await Promise.all([
+        getBooksByMember(m.id, { todos: true }),
+        getMusicsByMember(m.id, { todos: true }),
+      ]);
+      setBooks(b);
+      setMusics(mu);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function run(action: () => Promise<unknown>): Promise<boolean> {
+    try {
+      await action();
+      if (member) await reload(member);
+      return true;
+    } catch (e) {
+      alert("Não foi possível gravar: " + (e as Error).message);
+      return false;
+    }
   }
 
   useEffect(() => {
@@ -87,9 +106,9 @@ export default function AreaAssociado() {
     setProfileOpen(true);
   }
 
-  function saveProfile() {
+  async function saveProfile() {
     if (!member || !profileData.id) return;
-    upsertMember(profileData as DBMember & { id: string });
+    if (!(await run(() => upsertMember(profileData as DBMember & { id: string })))) return;
     const updated = { ...member, ...profileData };
     sessionStorage.setItem("academia_current_member", JSON.stringify(updated));
     setMember(updated as Member);
@@ -110,17 +129,16 @@ export default function AreaAssociado() {
     setBookModal({ open: true, data: { ...b, linksVenda: [...(b.linksVenda ?? [])] } });
   }
 
-  function saveBook() {
+  async function saveBook() {
     if (!bookModal.data.titulo?.trim()) { alert("Título obrigatório"); return; }
-    upsertBook(bookModal.data as Omit<DBBook, "id" | "createdAt"> & { id?: string });
-    reload(member!);
-    setBookModal({ open: false, data: {} });
+    if (await run(() => upsertBook(bookModal.data as Omit<DBBook, "id" | "createdAt"> & { id?: string }))) {
+      setBookModal({ open: false, data: {} });
+    }
   }
 
   function removeBook(id: string) {
     if (!confirm("Excluir este livro?")) return;
-    deleteBook(id);
-    reload(member!);
+    run(() => deleteBook(id));
   }
 
   function setBField<K extends keyof DBBook>(k: K, v: DBBook[K]) {
@@ -159,17 +177,16 @@ export default function AreaAssociado() {
     setMusicModal({ open: true, data: { ...m } });
   }
 
-  function saveMusic() {
+  async function saveMusic() {
     if (!musicModal.data.titulo?.trim()) { alert("Título obrigatório"); return; }
-    upsertMusic(musicModal.data as Omit<DBMusic, "id" | "createdAt"> & { id?: string });
-    reload(member!);
-    setMusicModal({ open: false, data: {} });
+    if (await run(() => upsertMusic(musicModal.data as Omit<DBMusic, "id" | "createdAt"> & { id?: string }))) {
+      setMusicModal({ open: false, data: {} });
+    }
   }
 
   function removeMusic(id: string) {
     if (!confirm("Excluir esta música?")) return;
-    deleteMusic(id);
-    reload(member!);
+    run(() => deleteMusic(id));
   }
 
   function setMField<K extends keyof DBMusic>(k: K, v: DBMusic[K]) {

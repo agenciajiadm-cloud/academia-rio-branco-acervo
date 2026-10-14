@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Lock, AlertCircle } from "lucide-react";
-import { getMemberByCode, seedIfEmpty } from "@/lib/members";
+import { getMemberByCode } from "@/lib/members";
 
 export default function Login() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => { seedIfEmpty(); }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,7 +19,7 @@ export default function Login() {
     await new Promise((r) => setTimeout(r, 500));
 
     const normalized = code.trim().toUpperCase().startsWith("#") ? code.trim() : `#${code.trim()}`;
-    const member = getMemberByCode(normalized);
+    const member = await getMemberByCode(normalized).catch(() => null);
 
     if (!member) {
       setError("Código não encontrado. Verifique e tente novamente.");

@@ -12,6 +12,8 @@ import {
   getBooks, getMusics, getMembers,
   type DBMember, type DBBook, type DBMusic
 } from "@/lib/db";
+import { useDbSync } from "@/lib/useDbSync";
+import DbStatus from "@/components/DbStatus";
 
 export default function DiretorDashboard() {
   const currentYear = new Date().getFullYear();
@@ -21,18 +23,12 @@ export default function DiretorDashboard() {
   const [books, setBooks] = useState<DBBook[]>([]);
   const [musics, setMusics] = useState<DBMusic[]>([]);
 
-  function reload() {
-    setMembers(getMembers());
-    setBooks(getBooks());
-    setMusics(getMusics());
-  }
-
-  useEffect(() => {
-    reload();
-    const handleUpdate = () => reload();
-    window.addEventListener("academia_db_updated", handleUpdate);
-    return () => window.removeEventListener("academia_db_updated", handleUpdate);
-  }, []);
+  const { loading, error } = useDbSync(async () => {
+    const [m, b, mu] = await Promise.all([getMembers({ todos: true }), getBooks({ todos: true }), getMusics({ todos: true })]);
+    setMembers(m);
+    setBooks(b);
+    setMusics(mu);
+  });
 
   const mesRefAtual = `${currentYear}-${currentMonthNum}`;
   const monthName = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"][new Date().getMonth()];
@@ -66,6 +62,7 @@ export default function DiretorDashboard() {
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8">
+      <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Welcome Banner */}
       <div className="bg-black text-white rounded-3xl p-6 md:p-10 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="relative z-10 max-w-2xl">

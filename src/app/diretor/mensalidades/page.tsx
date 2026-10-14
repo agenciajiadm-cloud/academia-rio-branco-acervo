@@ -11,6 +11,8 @@ import {
   getMembers, toggleMonthlyPayment, setBulkMonthlyPayment,
   type DBMember, type DBPayment
 } from "@/lib/db";
+import { useDbSync } from "@/lib/useDbSync";
+import DbStatus from "@/components/DbStatus";
 
 const MONTHS = [
   { num: "01", name: "Jan", full: "Janeiro" },
@@ -53,16 +55,17 @@ export default function DiretorMensalidades() {
   const [bulkMonth, setBulkMonth] = useState<string>(currentMonthNum);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
-  function reload() {
-    setMembers(getMembers());
-  }
+  const { loading, error } = useDbSync(async () => {
+    setMembers(await getMembers({ todos: true }));
+  });
 
-  useEffect(() => {
-    reload();
-    const handleUpdate = () => reload();
-    window.addEventListener("academia_db_updated", handleUpdate);
-    return () => window.removeEventListener("academia_db_updated", handleUpdate);
-  }, []);
+  async function run(action: () => Promise<unknown>) {
+    try {
+      await action();
+    } catch (e) {
+      alert("Não foi possível gravar: " + (e as Error).message);
+    }
+  }
 
   // Filtered members list
   const filteredMembers = useMemo(() => {
@@ -174,8 +177,7 @@ export default function DiretorMensalidades() {
   // Fast single click toggle: None -> Pago -> Pendente -> Isento -> Pago
   function handleCellClick(member: DBMember, monthNum: string) {
     const mesRef = `${selectedYear}-${monthNum}`;
-    toggleMonthlyPayment(member.id, mesRef);
-    reload();
+    run(() => toggleMonthlyPayment(member.id, mesRef));
   }
 
   // Open details popover
@@ -197,21 +199,21 @@ export default function DiretorMensalidades() {
   function handleSaveCustomPayment(status: "pago" | "pendente" | "isento") {
     if (!activeCell) return;
     const mesRef = `${selectedYear}-${activeCell.month}`;
-    toggleMonthlyPayment(
-      activeCell.member.id,
-      mesRef,
-      status,
-      activeCell.customValor,
-      activeCell.customObs
+    run(() =>
+      toggleMonthlyPayment(
+        activeCell.member.id,
+        mesRef,
+        status,
+        activeCell.customValor,
+        activeCell.customObs
+      )
     );
-    reload();
     setActiveCell(null);
   }
 
   function handleBulkApply() {
     const mesRef = `${selectedYear}-${bulkMonth}`;
-    setBulkMonthlyPayment(mesRef, "pago", DEFAULT_VALOR);
-    reload();
+    run(() => setBulkMonthlyPayment(mesRef, "pago", DEFAULT_VALOR));
     setBulkModalOpen(false);
   }
 
@@ -277,6 +279,7 @@ export default function DiretorMensalidades() {
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
+      <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Header & Year Switcher */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
         <div>

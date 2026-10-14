@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Mic, ArrowLeft, MapPin, Award, BookOpen } from "lucide-react";
-import { getMemberById, getMemberByCode, getBooksByMember, type DBMember, type DBBook } from "@/lib/db";
+import { getMemberById, getMemberByCode, getBooksByMember } from "@/lib/db";
 import BookCard from "@/components/BookCard";
 
 interface AutorDetailClientProps {
@@ -26,8 +26,10 @@ export default function AutorDetailClient({ id, initialAuthor, initialBooks }: A
   const [author, setAuthor] = useState(initialAuthor);
   const [books, setBooks] = useState(initialBooks);
 
-  function syncMember() {
-    const mem = getMemberById(id) || getMemberByCode(id);
+  async function syncMember() {
+    const mem = await getMemberById(id)
+      .then((m) => m ?? getMemberByCode(id))
+      .catch((e) => { console.error(e); return null; });
     if (mem) {
       setAuthor({
         id: mem.id,
@@ -40,7 +42,7 @@ export default function AutorDetailClient({ id, initialAuthor, initialBooks }: A
         cadeira: mem.cadeira,
       });
 
-      const dbBooks = getBooksByMember(mem.id);
+      const dbBooks = await getBooksByMember(mem.id).catch(() => []);
       if (dbBooks.length > 0) {
         setBooks(
           dbBooks.map((b) => ({

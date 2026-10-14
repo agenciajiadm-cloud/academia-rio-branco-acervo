@@ -9,8 +9,8 @@ import { AlertCircle, ExternalLink, Music } from "lucide-react";
 export default function Musicas() {
   const [musicList, setMusicList] = useState<any[]>(mockMusics);
 
-  function syncMusics() {
-    const dbMusics = getMusics();
+  async function syncMusics() {
+    const dbMusics = await getMusics().catch((e) => { console.error(e); return []; });
     if (dbMusics.length > 0) {
       setMusicList(
         dbMusics.map((m) => ({

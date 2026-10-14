@@ -10,6 +10,8 @@ import {
   getBooks, upsertBook, deleteBook, getMembers,
   type DBBook, type DBMember,
 } from "@/lib/db";
+import { useDbSync } from "@/lib/useDbSync";
+import DbStatus from "@/components/DbStatus";
 import { GENEROS, FAIXAS_ETARIAS, PLATAFORMAS_VENDA } from "@/lib/tags";
 
 type SortKey = "titulo" | "genero" | "faixaEtaria" | "dataPublicacao" | "status";
@@ -36,17 +38,11 @@ export default function DiretorLivros() {
     return () => { document.body.style.overflow = ""; };
   }, [modal.open]);
 
-  function reload() {
-    setBooks(getBooks());
-    setMembers(getMembers());
-  }
-
-  useEffect(() => {
-    reload();
-    const handleUpdate = () => reload();
-    window.addEventListener("academia_db_updated", handleUpdate);
-    return () => window.removeEventListener("academia_db_updated", handleUpdate);
-  }, []);
+  const { loading, error } = useDbSync(async () => {
+    const [b, m] = await Promise.all([getBooks({ todos: true }), getMembers({ todos: true })]);
+    setBooks(b);
+    setMembers(m);
+  });
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -82,19 +78,25 @@ export default function DiretorLivros() {
     setModal({ open: true, data: { ...book, linksVenda: [...(book.linksVenda ?? [])] } });
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm("Excluir este livro permanentemente?")) return;
-    deleteBook(id);
-    reload();
+    try {
+      await deleteBook(id);
+    } catch (e) {
+      alert("Não foi possível excluir: " + (e as Error).message);
+    }
   }
 
-  function handleSave() {
+  async function handleSave() {
     const d = modal.data;
     if (!d.titulo?.trim()) { alert("Título obrigatório"); return; }
     if (!d.memberId)        { alert("Selecione um autor"); return; }
-    upsertBook(d as Omit<DBBook, "id" | "createdAt"> & { id?: string });
-    reload();
-    setModal({ open: false, data: { ...EMPTY_BOOK } });
+    try {
+      await upsertBook(d as Omit<DBBook, "id" | "createdAt"> & { id?: string });
+      setModal({ open: false, data: { ...EMPTY_BOOK } });
+    } catch (e) {
+      alert("Não foi possível salvar: " + (e as Error).message);
+    }
   }
 
   function setField<K extends keyof DBBook>(k: K, v: DBBook[K]) {
@@ -138,6 +140,7 @@ export default function DiretorLivros() {
 
   return (
     <div className="p-4 md:p-10">
+      <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>

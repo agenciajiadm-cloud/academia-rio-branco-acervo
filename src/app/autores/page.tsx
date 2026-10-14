@@ -10,9 +10,14 @@ export default function Autores() {
   const [members, setMembers] = useState<DBMember[]>([]);
   const [books, setBooks] = useState<DBBook[]>([]);
 
-  function syncData() {
-    setMembers(getMembers());
-    setBooks(getBooks());
+  async function syncData() {
+    try {
+      const [m, b] = await Promise.all([getMembers(), getBooks()]);
+      setMembers(m);
+      setBooks(b);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   useEffect(() => {

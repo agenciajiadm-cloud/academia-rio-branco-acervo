@@ -10,6 +10,8 @@ import {
   getMusics, upsertMusic, deleteMusic, getMembers,
   type DBMusic, type DBMember,
 } from "@/lib/db";
+import { useDbSync } from "@/lib/useDbSync";
+import DbStatus from "@/components/DbStatus";
 import { TIPOS_MUSICA, PLATAFORMAS_AUDIO } from "@/lib/tags";
 
 type SortKey = "titulo" | "tipo" | "plataforma" | "status";
@@ -36,17 +38,11 @@ export default function DiretorMusicas() {
     return () => { document.body.style.overflow = ""; };
   }, [modal.open]);
 
-  function reload() {
-    setMusics(getMusics());
-    setMembers(getMembers());
-  }
-
-  useEffect(() => {
-    reload();
-    const handleUpdate = () => reload();
-    window.addEventListener("academia_db_updated", handleUpdate);
-    return () => window.removeEventListener("academia_db_updated", handleUpdate);
-  }, []);
+  const { loading, error } = useDbSync(async () => {
+    const [mu, m] = await Promise.all([getMusics({ todos: true }), getMembers({ todos: true })]);
+    setMusics(mu);
+    setMembers(m);
+  });
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -78,19 +74,25 @@ export default function DiretorMusicas() {
     return PLATAFORMAS_AUDIO.find(p => p.id === id)?.label ?? id;
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm("Excluir esta música?")) return;
-    deleteMusic(id);
-    reload();
+    try {
+      await deleteMusic(id);
+    } catch (e) {
+      alert("Não foi possível excluir: " + (e as Error).message);
+    }
   }
 
-  function handleSave() {
+  async function handleSave() {
     const d = modal.data;
     if (!d.titulo?.trim()) { alert("Título obrigatório"); return; }
     if (!d.memberId)        { alert("Selecione um autor"); return; }
-    upsertMusic(d as Omit<DBMusic, "id" | "createdAt"> & { id?: string });
-    reload();
-    setModal({ open: false, data: { ...EMPTY } });
+    try {
+      await upsertMusic(d as Omit<DBMusic, "id" | "createdAt"> & { id?: string });
+      setModal({ open: false, data: { ...EMPTY } });
+    } catch (e) {
+      alert("Não foi possível salvar: " + (e as Error).message);
+    }
   }
 
   function setField<K extends keyof DBMusic>(k: K, v: DBMusic[K]) {
@@ -109,6 +111,7 @@ export default function DiretorMusicas() {
 
   return (
     <div className="p-4 md:p-10">
+      <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>

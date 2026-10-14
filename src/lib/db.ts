@@ -1,7 +1,14 @@
 /**
  * Camada de dados unificada da Academia de Letras Barão do Rio Branco.
- * Armazenamento reativo local hoje (localStorage + CustomEvents), 100% pronto para Supabase.
+ * Tudo vem do Supabase (supabase/migrations/0001_schema.sql). O que cada
+ * visitante enxerga é decidido pelo RLS; aqui só mapeamos snake_case ⇄ camelCase.
+ *
+ * Por padrão os getters devolvem o que é público (membros ativos, livros e
+ * músicas publicados). O painel passa { todos: true } para ver tudo o que o
+ * RLS permitir (rascunhos, pendentes, pagamentos).
  */
+
+import { supabase } from "./supabase";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -68,17 +75,22 @@ export interface DBMember {
   pagamentos: DBPayment[];
 }
 
-// ─── Chaves ─────────────────────────────────────────────────────────────────
+export interface DBSettings {
+  mensalidadeValor: number;
+  whatsapp: string;
+  pixChave: string;
+  pixNome: string;
+}
 
-const KEYS = {
-  books:   "academia_books_v3",
-  musics:  "academia_musics_v3",
-  members: "academia_members_v3",
-} as const;
+type Opcoes = { todos?: boolean };
 
-const EVENT_NAME = "academia_db_updated";
+// Linhas cruas do PostgREST; os mapeadores abaixo dão o tipo certo a cada uma.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Row = Record<string, any>;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+const EVENT_NAME = "academia_db_updated";
 
 function notify() {
   if (typeof window !== "undefined") {
@@ -86,633 +98,485 @@ function notify() {
   }
 }
 
-function load<T>(key: string): T[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+/** Lança o erro do Supabase com uma mensagem legível; senão devolve os dados. */
+function ok<T>(res: { data: T; error: { message: string } | null }): T {
+  if (res.error) throw new Error(res.error.message);
+  return res.data;
 }
 
-function save<T>(key: string, data: T[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(key, JSON.stringify(data));
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+function normalizeCode(code: string): string {
+  const clean = code.trim().toUpperCase();
+  return clean.startsWith("#") ? clean : `#${clean}`;
+}
+
+/** Remove chaves undefined para não sobrescrever colunas num update parcial. */
+function defined(row: Row): Row {
+  return Object.fromEntries(Object.entries(row).filter(([, v]) => v !== undefined));
+}
+
+// ─── Mapeamento ─────────────────────────────────────────────────────────────
+
+const PUBLIC_MEMBER_COLUMNS =
+  "id, code, role, nome, cadeira, cidade, titulacao, instagram, bio, full_history, foto, palestras, data_registro";
+
+function toPayment(r: Row): DBPayment {
+  return {
+    id: r.id,
+    memberId: r.member_id,
+    mesReferencia: r.mes_referencia,
+    tipo: r.tipo,
+    valor: Number(r.valor),
+    status: r.status,
+    data: r.data,
+    metodo: r.metodo ?? undefined,
+    observacao: r.observacao ?? undefined,
+  };
+}
+
+function fromPayment(p: Partial<DBPayment>): Row {
+  return defined({
+    id: p.id,
+    member_id: p.memberId,
+    mes_referencia: p.mesReferencia,
+    tipo: p.tipo,
+    valor: p.valor,
+    status: p.status,
+    data: p.data,
+    metodo: p.metodo ?? null,
+    observacao: p.observacao ?? null,
+  });
+}
+
+function toMember(r: Row): DBMember {
+  return {
+    id: r.id,
+    code: r.code,
+    role: r.role,
+    nome: r.nome,
+    email: r.email ?? "",
+    cadeira: r.cadeira ?? "",
+    cidade: r.cidade ?? "",
+    titulacao: r.titulacao ?? "",
+    instagram: r.instagram ?? "",
+    bio: r.bio ?? "",
+    fullHistory: r.full_history ?? "",
+    foto: r.foto ?? "",
+    dataNascimento: r.data_nascimento ?? undefined,
+    palestras: r.palestras,
+    status: r.status ?? "ativo", // members_public só tem ativos
+    dataRegistro: r.data_registro,
+    pagamentos: (r.pagamentos ?? []).map(toPayment),
+  };
+}
+
+function fromMember(m: Partial<DBMember>): Row {
+  return defined({
+    id: m.id,
+    code: m.code,
+    role: m.role,
+    status: m.status,
+    nome: m.nome?.trim(),
+    email: m.email?.trim(),
+    cadeira: m.cadeira?.trim(),
+    cidade: m.cidade?.trim(),
+    titulacao: m.titulacao?.trim(),
+    instagram: m.instagram?.trim(),
+    bio: m.bio?.trim(),
+    full_history: m.fullHistory?.trim(),
+    foto: m.foto?.trim(),
+    data_nascimento: m.dataNascimento === undefined ? undefined : m.dataNascimento || null,
+    palestras: m.palestras,
+    data_registro: m.dataRegistro,
+  });
+}
+
+function toBook(r: Row): DBBook {
+  return {
+    id: r.id,
+    memberId: r.member_id,
+    titulo: r.titulo,
+    subtitulo: r.subtitulo,
+    sinopse: r.sinopse,
+    capaUrl: r.capa_url,
+    genero: r.genero,
+    faixaEtaria: r.faixa_etaria,
+    dataPublicacao: r.data_publicacao ?? "",
+    preco: r.preco === null ? undefined : Number(r.preco),
+    linksVenda: r.links_venda ?? [],
+    tags: r.tags ?? [],
+    status: r.status,
+    createdAt: r.created_at,
+  };
+}
+
+function fromBook(b: Partial<DBBook>): Row {
+  return defined({
+    id: b.id,
+    member_id: b.memberId,
+    titulo: b.titulo,
+    subtitulo: b.subtitulo,
+    sinopse: b.sinopse,
+    capa_url: b.capaUrl,
+    genero: b.genero,
+    faixa_etaria: b.faixaEtaria,
+    data_publicacao: b.dataPublicacao === undefined ? undefined : b.dataPublicacao || null,
+    preco: b.preco === undefined ? undefined : b.preco ?? null,
+    links_venda: b.linksVenda,
+    tags: b.tags,
+    status: b.status,
+    created_at: b.createdAt,
+  });
+}
+
+function toMusic(r: Row): DBMusic {
+  return {
+    id: r.id,
+    memberId: r.member_id,
+    titulo: r.titulo,
+    descricao: r.descricao,
+    capaUrl: r.capa_url,
+    tipo: r.tipo,
+    plataforma: r.plataforma,
+    linkExterno: r.link_externo,
+    tags: r.tags ?? [],
+    status: r.status,
+    createdAt: r.created_at,
+  };
+}
+
+function fromMusic(m: Partial<DBMusic>): Row {
+  return defined({
+    id: m.id,
+    member_id: m.memberId,
+    titulo: m.titulo,
+    descricao: m.descricao,
+    capa_url: m.capaUrl,
+    tipo: m.tipo,
+    plataforma: m.plataforma,
+    link_externo: m.linkExterno,
+    tags: m.tags,
+    status: m.status,
+    created_at: m.createdAt,
+  });
+}
+
+// ─── CONFIGURAÇÕES ──────────────────────────────────────────────────────────
+
+export async function getSettings(): Promise<DBSettings> {
+  const r = ok(await supabase().from("settings").select("*").eq("id", 1).maybeSingle());
+  return {
+    mensalidadeValor: r ? Number(r.mensalidade_valor) : 49.9,
+    whatsapp: r?.whatsapp ?? "",
+    pixChave: r?.pix_chave ?? "",
+    pixNome: r?.pix_nome ?? "",
+  };
+}
+
+export async function updateSettings(data: Partial<DBSettings>): Promise<void> {
+  ok(
+    await supabase()
+      .from("settings")
+      .update(
+        defined({
+          mensalidade_valor: data.mensalidadeValor,
+          whatsapp: data.whatsapp,
+          pix_chave: data.pixChave,
+          pix_nome: data.pixNome,
+        })
+      )
+      .eq("id", 1)
+  );
   notify();
-}
-
-function uid(): string {
-  return typeof crypto !== "undefined" && crypto.randomUUID
-    ? crypto.randomUUID()
-    : "id_" + Math.random().toString(36).substring(2, 11);
-}
-
-// ─── SEED DATA ──────────────────────────────────────────────────────────────
-
-const INITIAL_MEMBERS: DBMember[] = [
-  {
-    id: "policarpo",
-    code: "#001001",
-    role: "diretor",
-    nome: "José Policarpo Miranda Junior",
-    email: "Dr.PolicarpoEngenheiro@outlook.pt",
-    cadeira: "Patrono 01 — Presidente",
-    cidade: "Macapá, AP",
-    titulacao: "Engenheiro Florestal, Doutor em Biotecnologia e Biodiversidade",
-    instagram: "https://www.instagram.com/policarpo.junior.311",
-    bio: "Escritor, pintor, fotógrafo e pesquisador. Presidente da Academia de Letras Barão do Rio Branco.",
-    fullHistory: "Com atuação multifacetada, pesquisador, professor, gestor público, escritor e acadêmico, José Policarpo Miranda Junior construiu uma carreira marcada pelo comprometimento com a defesa ambiental, com a ciência e com a cultura. Nascido em Belém do Pará, é Engenheiro Florestal, Doutor em Biotecnologia e Biodiversidade pela Universidade Federal do Amapá – UNIFAP. Presidente da Academia de Letras Barão do Rio Branco. Sua obra, tanto científica quanto literária, contribui para o fortalecimento do pensamento amazônida e para a divulgação de saberes que valorizam a biodiversidade, a educação, a história e a identidade regional.",
-    foto: "/imagens/policarpo-novo.jpg",
-    palestras: true,
-    status: "ativo",
-    dataRegistro: "2025-01-26T10:00:00.000Z",
-    pagamentos: [
-      { id: "p1_1", memberId: "policarpo", mesReferencia: "2026-01", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-01-10", metodo: "pix" },
-      { id: "p1_2", memberId: "policarpo", mesReferencia: "2026-02", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-02-10", metodo: "pix" },
-      { id: "p1_3", memberId: "policarpo", mesReferencia: "2026-03", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-03-10", metodo: "pix" },
-      { id: "p1_4", memberId: "policarpo", mesReferencia: "2026-04", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-04-10", metodo: "pix" },
-    ],
-  },
-  {
-    id: "elaine-araujo",
-    code: "#001002",
-    role: "associado",
-    nome: "Elaine Araújo",
-    email: "elaine.a3@icloud.com",
-    cadeira: "Cadeira Castro Alves",
-    cidade: "Santana, AP",
-    titulacao: "Mestranda em Letras, Especialista em Docência Superior, Pedagoga",
-    instagram: "https://www.instagram.com/elainearaujoferreira_tv",
-    bio: "Professora Mestranda em Letras, compositora, poetisa e produtora cultural do Amapá.",
-    fullHistory: "Professora Mestranda do curso de Letras, Literatura e Críticas Literárias da PUC-Goiás, Especialista em Docência do Ensino Superior pela Faculdade CETE. Graduada em Licenciatura em Pedagogia pelo IFPA e em Teologia pela FATECH. Presidente da Fundação de Cultura de Santana-Amapá de 2022 a 2023. Autora dos Hinos Municipais de Santana (1989) e Laranjal do Jari (1995) e do livro 'Dicionário Caboquês'.",
-    foto: "/imagens/elaine-araujo.jpg",
-    palestras: true,
-    status: "ativo",
-    dataRegistro: "2025-01-26T10:00:00.000Z",
-    pagamentos: [
-      { id: "p2_1", memberId: "elaine-araujo", mesReferencia: "2026-01", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-01-15", metodo: "pix" },
-      { id: "p2_2", memberId: "elaine-araujo", mesReferencia: "2026-02", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-02-15", metodo: "pix" },
-      { id: "p2_3", memberId: "elaine-araujo", mesReferencia: "2026-03", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-03-15", metodo: "pix" },
-      { id: "p2_4", memberId: "elaine-araujo", mesReferencia: "2026-04", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-04-15", metodo: "pix" },
-    ],
-  },
-  {
-    id: "jacqueline-pharlan",
-    code: "#001003",
-    role: "associado",
-    nome: "Jacqueline Pharlan de Camargo",
-    email: "jakepharlan@hotmail.com",
-    cadeira: "Patrono Ivo Cannuty — Cadeira 052",
-    cidade: "Macapá, AP",
-    titulacao: "Mestre em Educação, Engenheira de Segurança do Trabalho",
-    instagram: "https://www.instagram.com/jacquepharlan",
-    bio: "Professora de inglês, Engenheira de Segurança do Trabalho, escritora e cicloativista com obras publicadas nacional e internacionalmente.",
-    fullHistory: "Jacqueline Pharlan de Camargo é professora de inglês, Engenheira de Segurança do Trabalho, escritora e cicloativista. Mestre em Educação com ênfase em gestão educacional e em Tecnologias Emergentes. Livros publicados sobre Cicloturismo, poesias e contos em coletâneas. Participou de feiras culturais como o Equinócio das Águas e Feira Internacional do Livro de Caiena.",
-    foto: "/imagens/jacqueline-pharlan.jpg",
-    palestras: true,
-    status: "ativo",
-    dataRegistro: "2025-01-26T10:00:00.000Z",
-    pagamentos: [
-      { id: "p3_1", memberId: "jacqueline-pharlan", mesReferencia: "2026-01", tipo: "recorrente", valor: 49.9, status: "pago", data: "2026-01-10", metodo: "cartao" },
-      { id: "p3_2", memberId: "jacqueline-pharlan", mesReferencia: "2026-02", tipo: "recorrente", valor: 49.9, status: "pago", data: "2026-02-10", metodo: "cartao" },
-      { id: "p3_3", memberId: "jacqueline-pharlan", mesReferencia: "2026-03", tipo: "recorrente", valor: 49.9, status: "pago", data: "2026-03-10", metodo: "cartao" },
-      { id: "p3_4", memberId: "jacqueline-pharlan", mesReferencia: "2026-04", tipo: "recorrente", valor: 49.9, status: "pago", data: "2026-04-10", metodo: "cartao" },
-    ],
-  },
-  {
-    id: "maria-lucia-coelho",
-    code: "#001004",
-    role: "associado",
-    nome: "Maria Lúcia Coelho",
-    email: "luciacoelhoadv@uol.com.br",
-    cadeira: "Patrono Maria Beatriz do Nascimento — Cadeira 51",
-    cidade: "Macapá, AP",
-    titulacao: "Advogada, Mestra em Comunicação, Doutoranda em Educação",
-    instagram: "",
-    bio: "Escritora, poetisa, advogada, mestra em Comunicação e doutoranda em Educação.",
-    fullHistory: "Nascida em Afuá, Estado do Pará. Mestra em Comunicação, Linguagens e Cultura e Doutoranda em Educação. Assistente Social, Advogada. Autora do livro de poesias 'Sinfonia de Emoções', além de obras nas categorias crônicas e contos.",
-    foto: "/imagens/maria-lucia-coelho.jpg",
-    palestras: true,
-    status: "ativo",
-    dataRegistro: "2026-04-22T14:12:00.000Z",
-    pagamentos: [
-      { id: "p4_1", memberId: "maria-lucia-coelho", mesReferencia: "2026-04", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-04-22", metodo: "pix" },
-    ],
-  },
-  {
-    id: "mathias-alencar",
-    code: "#001005",
-    role: "associado",
-    nome: "Cesar Augusto Mathias de Alencar",
-    email: "escoladeescrita@gmail.com",
-    cadeira: "Patrono João Cabral de Melo Neto — Cadeira 50",
-    cidade: "Macapá, AP",
-    titulacao: "Doutor em Filosofia (UFRJ), Professor Efetivo UNIFAP e UFPA",
-    instagram: "https://www.instagram.com/mathiasdealencar",
-    bio: "Poeta e professor de Filosofia. Doutor pela UFRJ, autor de três livros de poesia e do romance Bárbara.",
-    fullHistory: "Mathias de Alencar é poeta e professor. Doutor em Filosofia pela UFRJ, é docente efetivo de Filosofia na UNIFAP e pós-graduação da UFPA. Autor de 'Ninguém há de doar-se a dois amores ou Julieta' (2023), 'Poem(a)limpo' e 'Bárbara'.",
-    foto: "/imagens/mathias-alencar.jpg",
-    palestras: true,
-    status: "ativo",
-    dataRegistro: "2026-04-26T11:34:00.000Z",
-    pagamentos: [
-      { id: "p5_1", memberId: "mathias-alencar", mesReferencia: "2026-04", tipo: "mensal", valor: 49.9, status: "pago", data: "2026-04-26", metodo: "pix" },
-    ],
-  },
-];
-
-const INITIAL_BOOKS: DBBook[] = [
-  {
-    id: "b1",
-    memberId: "policarpo",
-    titulo: "O Forte",
-    subtitulo: "A defesa de um império",
-    sinopse: "Uma imersão na cultura e na força dos defensores do nosso território. Obra de maturidade poética e política ambientada na Amazônia profunda.",
-    capaUrl: "/images/capa-forte.png",
-    genero: "Romance",
-    faixaEtaria: "Adulto (18+)",
-    dataPublicacao: "2024-01-01",
-    preco: 49.9,
-    linksVenda: [
-      { plataforma: "amazon", url: "https://amazon.com.br" },
-      { plataforma: "mercado", url: "https://mercadolivre.com.br" },
-    ],
-    tags: ["amazônia", "história", "épico"],
-    status: "publicado",
-    createdAt: "2024-01-01T00:00:00.000Z",
-  },
-  {
-    id: "b2",
-    memberId: "policarpo",
-    titulo: "Samurai de Carvão",
-    subtitulo: "A honra nas chamas escurecidas",
-    sinopse: "Um mergulho denso no mundo distópico, onde a honra molda as espadas no limite da realidade moderna.",
-    capaUrl: "/images/capa-samurai.png",
-    genero: "Ficção Científica",
-    faixaEtaria: "Adulto (18+)",
-    dataPublicacao: "2023-08-01",
-    preco: 69.9,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["ficção", "honra", "distopia"],
-    status: "publicado",
-    createdAt: "2023-08-01T00:00:00.000Z",
-  },
-  {
-    id: "b3",
-    memberId: "policarpo",
-    titulo: "A Vila",
-    subtitulo: "Histórias do extremo Norte",
-    sinopse: "Os mitos e vivências amazônicas recontados pela vivência intrínseca com os ribeirinhos e povos originários.",
-    capaUrl: "/images/capa-vila.png",
-    genero: "Conto",
-    faixaEtaria: "Adulto (18+)",
-    dataPublicacao: "2023-11-01",
-    preco: 39.9,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["amazônia", "contos", "ribeirinhos"],
-    status: "publicado",
-    createdAt: "2023-11-01T00:00:00.000Z",
-  },
-  {
-    id: "b4",
-    memberId: "policarpo",
-    titulo: "Pensamentos na Escuridão",
-    subtitulo: "A traição do destino",
-    sinopse: "Um convite poético a entender os labirintos do ciúme, da dúvida e da memória abstrata.",
-    capaUrl: "/images/capa-pensamentos.png",
-    genero: "Poesia",
-    faixaEtaria: "Adulto (18+)",
-    dataPublicacao: "2023-06-01",
-    preco: 35.0,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["poesia", "filosofia", "introspecção"],
-    status: "publicado",
-    createdAt: "2023-06-01T00:00:00.000Z",
-  },
-  {
-    id: "b5",
-    memberId: "policarpo",
-    titulo: "Passos Perdidos",
-    subtitulo: "Onde terminam os caminhos",
-    sinopse: "Uma obra investigativa e literária recheada de ação e reflexões sobre a história amapaense.",
-    capaUrl: "/images/capa-passos.png",
-    genero: "Crônica",
-    faixaEtaria: "Adulto (18+)",
-    dataPublicacao: "2024-02-01",
-    preco: 45.0,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["crônica", "amapá", "investigação"],
-    status: "publicado",
-    createdAt: "2024-02-01T00:00:00.000Z",
-  },
-  {
-    id: "b6",
-    memberId: "policarpo",
-    titulo: "Caipira",
-    subtitulo: "A caminhada eterna",
-    sinopse: "A aridez da terra e a magia do interior do Brasil retratadas em prosa poética envolvente.",
-    capaUrl: "/images/capa-caipira.png",
-    genero: "Romance",
-    faixaEtaria: "Adulto (18+)",
-    dataPublicacao: "2024-05-01",
-    preco: 59.9,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["cultura", "brasil", "romance"],
-    status: "publicado",
-    createdAt: "2024-05-01T00:00:00.000Z",
-  },
-  {
-    id: "b7",
-    memberId: "policarpo",
-    titulo: "Turminha",
-    subtitulo: "O futuro nas entrelinhas",
-    sinopse: "A perspectiva encantadora das crianças e do aprendizado lúdico na primeira idade.",
-    capaUrl: "/images/capa-turminha.png",
-    genero: "Literatura Infantil",
-    faixaEtaria: "Infantil (0–8 anos)",
-    dataPublicacao: "2024-09-01",
-    preco: 29.9,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["infantil", "educação", "leitura"],
-    status: "publicado",
-    createdAt: "2024-09-01T00:00:00.000Z",
-  },
-  {
-    id: "b8",
-    memberId: "elaine-araujo",
-    titulo: "Dicionário Caboquês",
-    subtitulo: "A Língua do Cabuçu nas Brenhas da Amazônia",
-    sinopse: "Entre saberes e fazeres, um resgate etnolinguístico das expressões caboclas e tradições orais do Amapá e do Norte.",
-    capaUrl: "/imagens/elaine-araujo.jpg",
-    genero: "Acadêmico",
-    faixaEtaria: "Todas as idades",
-    dataPublicacao: "2025-03-01",
-    preco: 49.9,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["caboquês", "amazônia", "linguística", "cultura"],
-    status: "publicado",
-    createdAt: "2025-03-01T00:00:00.000Z",
-  },
-  {
-    id: "b9",
-    memberId: "mathias-alencar",
-    titulo: "Bárbara",
-    subtitulo: "Edição Especial 10 Anos",
-    sinopse: "Romance aclamado pela crítica literária. Uma narrativa sensorial que explora as imagens e sons das palavras como potências estéticas.",
-    capaUrl: "/imagens/mathias-alencar.jpg",
-    genero: "Romance",
-    faixaEtaria: "Adulto (18+)",
-    dataPublicacao: "2025-06-01",
-    preco: 54.9,
-    linksVenda: [{ plataforma: "amazon", url: "https://amazon.com.br" }],
-    tags: ["romance", "filosofia", "literatura"],
-    status: "publicado",
-    createdAt: "2025-06-01T00:00:00.000Z",
-  },
-];
-
-const INITIAL_MUSICS: DBMusic[] = [
-  {
-    id: "m1",
-    memberId: "elaine-araujo",
-    titulo: "Hino de Santana e Vozes da Floresta",
-    descricao: "Composições e hinos oficiais celebrando a história e a biodiversidade amazônica.",
-    capaUrl: "/imagens/elaine-araujo.jpg",
-    tipo: "Música Autoral",
-    plataforma: "spotify",
-    linkExterno: "https://open.spotify.com",
-    tags: ["amazônia", "hinos", "santana"],
-    status: "publicado",
-    createdAt: "2025-01-01T00:00:00.000Z",
-  },
-  {
-    id: "m2",
-    memberId: "mathias-alencar",
-    titulo: "Bárbara — Audiolivro & Poesias Faladas",
-    descricao: "Versão falada com declamações poéticas e trilha incidental acústica.",
-    capaUrl: "/imagens/mathias-alencar.jpg",
-    tipo: "Audiolivro",
-    plataforma: "youtube",
-    linkExterno: "https://youtube.com",
-    tags: ["audiolivro", "poesia", "teatral"],
-    status: "publicado",
-    createdAt: "2025-06-01T00:00:00.000Z",
-  },
-  {
-    id: "m3",
-    memberId: "policarpo",
-    titulo: "Contos e Memórias do Amapá",
-    descricao: "Gravação especial de contos narrados pelo Presidente da Academia.",
-    capaUrl: "/imagens/policarpo-novo.jpg",
-    tipo: "Podcast Literário",
-    plataforma: "spotify",
-    linkExterno: "https://open.spotify.com",
-    tags: ["história", "amapá", "podcast"],
-    status: "publicado",
-    createdAt: "2025-02-01T00:00:00.000Z",
-  },
-];
-
-function seedIfEmpty(): void {
-  if (typeof window === "undefined") return;
-  const existingMembers = localStorage.getItem(KEYS.members);
-  if (!existingMembers) {
-    localStorage.setItem(KEYS.members, JSON.stringify(INITIAL_MEMBERS));
-  }
-  const existingBooks = localStorage.getItem(KEYS.books);
-  if (!existingBooks) {
-    localStorage.setItem(KEYS.books, JSON.stringify(INITIAL_BOOKS));
-  }
-  const existingMusics = localStorage.getItem(KEYS.musics);
-  if (!existingMusics) {
-    localStorage.setItem(KEYS.musics, JSON.stringify(INITIAL_MUSICS));
-  }
 }
 
 // ─── MEMBERS (INTEGRANTES & DIRETORES) ──────────────────────────────────────
 
-export function getMembers(): DBMember[] {
-  seedIfEmpty();
-  const members = load<DBMember>(KEYS.members);
-  return members.length > 0 ? members : INITIAL_MEMBERS;
+/** Público: membros ativos, sem e-mail. { todos: true }: tabela completa com pagamentos (diretor). */
+export async function getMembers(opts: Opcoes = {}): Promise<DBMember[]> {
+  const rows = opts.todos
+    ? ok(await supabase().from("members").select("*, pagamentos:payments(*)").order("code"))
+    : ok(await supabase().from("members_public").select(PUBLIC_MEMBER_COLUMNS).order("code"));
+  return (rows ?? []).map(toMember);
 }
 
-export function getMemberByCode(code: string): DBMember | null {
-  const clean = code.trim().toUpperCase();
-  const normalized = clean.startsWith("#") ? clean : `#${clean}`;
-  return getMembers().find(m => m.code.toUpperCase() === normalized) ?? null;
+export async function getMemberByCode(code: string, opts: Opcoes = {}): Promise<DBMember | null> {
+  const r = opts.todos
+    ? ok(await supabase().from("members").select("*, pagamentos:payments(*)").eq("code", normalizeCode(code)).maybeSingle())
+    : ok(await supabase().from("members_public").select(PUBLIC_MEMBER_COLUMNS).eq("code", normalizeCode(code)).maybeSingle());
+  return r ? toMember(r) : null;
 }
 
-export function getMemberById(id: string): DBMember | null {
-  return getMembers().find(m => m.id === id) ?? null;
+export async function getMemberById(id: string, opts: Opcoes = {}): Promise<DBMember | null> {
+  const r = opts.todos
+    ? ok(await supabase().from("members").select("*, pagamentos:payments(*)").eq("id", id).maybeSingle())
+    : ok(await supabase().from("members_public").select(PUBLIC_MEMBER_COLUMNS).eq("id", id).maybeSingle());
+  return r ? toMember(r) : null;
 }
 
-export function generateNextMemberCode(): string {
-  const members = getMembers();
-  const numericCodes = members
-    .map(m => parseInt(m.code.replace(/\D/g, ""), 10))
-    .filter(n => !isNaN(n) && n > 0);
-  const max = numericCodes.length > 0 ? Math.max(...numericCodes) : 1005;
-  const next = max + 1;
-  return `#${next.toString().padStart(6, "0")}`;
+/** Pré-visualização do próximo código (o banco atribui o mesmo valor no insert). */
+export async function generateNextMemberCode(): Promise<string> {
+  return ok(await supabase().rpc("next_member_code")) as string;
 }
 
-export function createMember(data: Partial<DBMember> & { nome: string }): DBMember {
-  const members = getMembers();
-  const rawId = data.id?.trim() || data.nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-  const id = rawId || uid();
-  
-  const code = data.code?.trim().startsWith("#") ? data.code.trim().toUpperCase() : `#${(data.code?.trim() || generateNextMemberCode().replace("#", "")).toUpperCase()}`;
+export async function createMember(data: Partial<DBMember> & { nome: string }): Promise<DBMember> {
+  const baseId = data.id?.trim() || slugify(data.nome) || crypto.randomUUID();
+  const exists = ok(await supabase().from("members").select("id").eq("id", baseId).maybeSingle());
+  const id = exists ? `${baseId}-${crypto.randomUUID().slice(0, 6)}` : baseId;
 
-  const newMember: DBMember = {
-    nome: data.nome.trim(),
-    email: data.email?.trim() || "",
-    cadeira: data.cadeira?.trim() || "",
-    cidade: data.cidade?.trim() || "Macapá, AP",
-    titulacao: data.titulacao?.trim() || "",
-    instagram: data.instagram?.trim() || "",
-    foto: data.foto?.trim() || "",
-    bio: data.bio?.trim() || "",
-    fullHistory: data.fullHistory?.trim() || "",
-    palestras: data.palestras !== false,
+  const row = fromMember({
+    cidade: "Macapá, AP",
+    palestras: true,
     ...data,
     id,
-    code,
+    code: data.code?.trim() ? normalizeCode(data.code) : undefined, // vazio → default do banco
     role: data.role || "associado",
     status: data.status || "ativo",
-    dataRegistro: data.dataRegistro || new Date().toISOString(),
-    pagamentos: data.pagamentos || [],
-  };
+  });
 
-  members.push(newMember);
-  save(KEYS.members, members);
-  return newMember;
+  const r = ok(await supabase().from("members").insert(row).select("*, pagamentos:payments(*)").single());
+  notify();
+  return toMember(r);
 }
 
-export function upsertMember(data: Partial<DBMember> & { id: string }): DBMember {
-  const members = getMembers();
-  const idx = members.findIndex(m => m.id === data.id);
-  if (idx >= 0) {
-    members[idx] = { ...members[idx], ...data };
-    save(KEYS.members, members);
-    return members[idx];
-  } else {
-    return createMember(data as any);
-  }
+export async function upsertMember(data: Partial<DBMember> & { id: string }): Promise<DBMember> {
+  const r = ok(
+    await supabase()
+      .from("members")
+      .update(fromMember(data)) // fromMember ignora `pagamentos`
+      .eq("id", data.id)
+      .select("*, pagamentos:payments(*)")
+      .maybeSingle()
+  );
+  if (!r) return createMember(data as DBMember);
+  notify();
+  return toMember(r);
 }
 
-export function deleteMember(id: string): void {
-  const members = getMembers().filter(m => m.id !== id);
-  save(KEYS.members, members);
+export async function deleteMember(id: string): Promise<void> {
+  ok(await supabase().from("members").delete().eq("id", id));
+  notify();
 }
 
 // ─── MENSALIDADES / CONTROLE FINANCEIRO ESTILO EXCEL ───────────────────────
 
-export function getMemberMonthlyPayment(memberId: string, mesReferencia: string): DBPayment | null {
-  const member = getMemberById(memberId);
-  if (!member || !member.pagamentos) return null;
-  return member.pagamentos.find(p => p.mesReferencia === mesReferencia) ?? null;
+export async function getMemberMonthlyPayment(memberId: string, mesReferencia: string): Promise<DBPayment | null> {
+  const r = ok(
+    await supabase()
+      .from("payments")
+      .select("*")
+      .eq("member_id", memberId)
+      .eq("mes_referencia", mesReferencia)
+      .maybeSingle()
+  );
+  return r ? toPayment(r) : null;
 }
 
 /**
  * Alterna rapidamente o status do mês de um membro:
- * Sem registro -> Pago (R$ 49,90) -> Pendente -> Isento -> Pago...
+ * Sem registro -> Pago -> Pendente -> Isento -> Pago...
+ * Sem `valor`, usa a mensalidade de settings.
  */
-export function toggleMonthlyPayment(
+export async function toggleMonthlyPayment(
   memberId: string,
   mesReferencia: string,
   forceStatus?: "pago" | "pendente" | "isento",
-  valor: number = 49.9,
+  valor?: number,
   observacao?: string
-): DBPayment {
-  const members = getMembers();
-  const idx = members.findIndex(m => m.id === memberId);
-  if (idx === -1) throw new Error("Membro não encontrado");
-
-  const member = members[idx];
-  member.pagamentos = member.pagamentos || [];
-  const pIdx = member.pagamentos.findIndex(p => p.mesReferencia === mesReferencia);
+): Promise<DBPayment> {
+  const current = await getMemberMonthlyPayment(memberId, mesReferencia);
 
   let nextStatus: "pago" | "pendente" | "isento" = forceStatus ?? "pago";
-
-  if (!forceStatus) {
-    if (pIdx === -1) {
-      nextStatus = "pago";
-    } else {
-      const current = member.pagamentos[pIdx].status;
-      if (current === "pago") nextStatus = "pendente";
-      else if (current === "pendente") nextStatus = "isento";
-      else nextStatus = "pago";
-    }
+  if (!forceStatus && current) {
+    if (current.status === "pago") nextStatus = "pendente";
+    else if (current.status === "pendente") nextStatus = "isento";
+    else nextStatus = "pago";
   }
 
-  const paymentData: DBPayment = {
-    id: pIdx >= 0 ? member.pagamentos[pIdx].id : uid(),
-    memberId,
-    mesReferencia,
-    tipo: "mensal",
-    valor: nextStatus === "isento" ? 0 : (valor || 49.9),
-    status: nextStatus,
-    data: new Date().toISOString().split("T")[0],
-    metodo: "pix",
-    observacao: observacao || (pIdx >= 0 ? member.pagamentos[pIdx].observacao : undefined),
-  };
-
-  if (pIdx >= 0) {
-    member.pagamentos[pIdx] = paymentData;
-  } else {
-    member.pagamentos.push(paymentData);
-  }
-
-  save(KEYS.members, members);
-  return paymentData;
+  const valorMensal = valor || (await getSettings()).mensalidadeValor;
+  const r = ok(
+    await supabase()
+      .from("payments")
+      .upsert(
+        fromPayment({
+          memberId,
+          mesReferencia,
+          tipo: current?.tipo ?? "mensal",
+          valor: nextStatus === "isento" ? 0 : valorMensal,
+          status: nextStatus,
+          data: new Date().toISOString().split("T")[0],
+          metodo: current?.metodo ?? "pix",
+          observacao: observacao || current?.observacao,
+        }),
+        { onConflict: "member_id,mes_referencia" }
+      )
+      .select()
+      .single()
+  );
+  notify();
+  return toPayment(r);
 }
 
-export function setBulkMonthlyPayment(
+export async function setBulkMonthlyPayment(
   mesReferencia: string,
   status: "pago" | "pendente" | "isento",
-  valor: number = 49.9
-): void {
-  const members = getMembers();
-  members.forEach(member => {
-    if (member.status === "inativo") return;
-    member.pagamentos = member.pagamentos || [];
-    const pIdx = member.pagamentos.findIndex(p => p.mesReferencia === mesReferencia);
-    const item: DBPayment = {
-      id: pIdx >= 0 ? member.pagamentos[pIdx].id : uid(),
-      memberId: member.id,
+  valor?: number
+): Promise<void> {
+  const valorMensal = valor || (await getSettings()).mensalidadeValor;
+  const members = ok(await supabase().from("members").select("id").neq("status", "inativo"));
+  const today = new Date().toISOString().split("T")[0];
+  const rows = (members ?? []).map((m: Row) =>
+    fromPayment({
+      memberId: m.id,
       mesReferencia,
       tipo: "mensal",
-      valor: status === "isento" ? 0 : valor,
+      valor: status === "isento" ? 0 : valorMensal,
       status,
-      data: new Date().toISOString().split("T")[0],
+      data: today,
       metodo: "pix",
-    };
-    if (pIdx >= 0) member.pagamentos[pIdx] = item;
-    else member.pagamentos.push(item);
-  });
-  save(KEYS.members, members);
+    })
+  );
+  if (rows.length > 0) {
+    ok(await supabase().from("payments").upsert(rows, { onConflict: "member_id,mes_referencia" }));
+  }
+  notify();
 }
 
 // ─── BOOKS (LIVROS DO ACERVO) ───────────────────────────────────────────────
 
-export function getBooks(): DBBook[] {
-  seedIfEmpty();
-  const books = load<DBBook>(KEYS.books);
-  return books.length > 0 ? books : INITIAL_BOOKS;
+/** Público: só publicados. { todos: true }: inclui rascunhos que o RLS permitir. */
+export async function getBooks(opts: Opcoes = {}): Promise<DBBook[]> {
+  let q = supabase().from("books").select("*").order("created_at", { ascending: false });
+  if (!opts.todos) q = q.eq("status", "publicado");
+  return (ok(await q) ?? []).map(toBook);
 }
 
-export function getBooksByMember(memberId: string): DBBook[] {
-  return getBooks().filter(b => b.memberId === memberId);
+export async function getBookById(id: string): Promise<DBBook | null> {
+  const r = ok(await supabase().from("books").select("*").eq("id", id).maybeSingle());
+  return r ? toBook(r) : null;
 }
 
-export function upsertBook(data: Omit<DBBook, "id" | "createdAt"> & { id?: string }): DBBook {
-  const books = getBooks();
-  if (data.id) {
-    const idx = books.findIndex(b => b.id === data.id);
-    const updated = {
-      ...data,
-      id: data.id,
-      createdAt: books[idx]?.createdAt ?? new Date().toISOString(),
-    } as DBBook;
-    if (idx >= 0) books[idx] = updated;
-    else books.push(updated);
-    save(KEYS.books, books);
-    return updated;
-  }
-  const novo: DBBook = {
-    ...data,
-    id: "b_" + uid().slice(0, 8),
-    createdAt: new Date().toISOString(),
-  } as DBBook;
-  books.push(novo);
-  save(KEYS.books, books);
-  return novo;
+export async function getBooksByMember(memberId: string, opts: Opcoes = {}): Promise<DBBook[]> {
+  let q = supabase().from("books").select("*").eq("member_id", memberId).order("created_at", { ascending: false });
+  if (!opts.todos) q = q.eq("status", "publicado");
+  return (ok(await q) ?? []).map(toBook);
 }
 
-export function deleteBook(id: string): void {
-  save(KEYS.books, getBooks().filter(b => b.id !== id));
+export async function upsertBook(data: Omit<DBBook, "id" | "createdAt"> & { id?: string }): Promise<DBBook> {
+  const row = fromBook(data);
+  const r = data.id
+    ? ok(await supabase().from("books").upsert(row).select().single())
+    : ok(await supabase().from("books").insert(row).select().single());
+  notify();
+  return toBook(r);
+}
+
+export async function deleteBook(id: string): Promise<void> {
+  ok(await supabase().from("books").delete().eq("id", id));
+  notify();
 }
 
 // ─── MUSICS (MÚSICAS & AUDIOLIVROS) ─────────────────────────────────────────
 
-export function getMusics(): DBMusic[] {
-  seedIfEmpty();
-  const musics = load<DBMusic>(KEYS.musics);
-  return musics.length > 0 ? musics : INITIAL_MUSICS;
+export async function getMusics(opts: Opcoes = {}): Promise<DBMusic[]> {
+  let q = supabase().from("musics").select("*").order("created_at", { ascending: false });
+  if (!opts.todos) q = q.eq("status", "publicado");
+  return (ok(await q) ?? []).map(toMusic);
 }
 
-export function getMusicsByMember(memberId: string): DBMusic[] {
-  return getMusics().filter(m => m.memberId === memberId);
+export async function getMusicsByMember(memberId: string, opts: Opcoes = {}): Promise<DBMusic[]> {
+  let q = supabase().from("musics").select("*").eq("member_id", memberId).order("created_at", { ascending: false });
+  if (!opts.todos) q = q.eq("status", "publicado");
+  return (ok(await q) ?? []).map(toMusic);
 }
 
-export function upsertMusic(data: Omit<DBMusic, "id" | "createdAt"> & { id?: string }): DBMusic {
-  const musics = getMusics();
-  if (data.id) {
-    const idx = musics.findIndex(m => m.id === data.id);
-    const updated = {
-      ...data,
-      id: data.id,
-      createdAt: musics[idx]?.createdAt ?? new Date().toISOString(),
-    } as DBMusic;
-    if (idx >= 0) musics[idx] = updated;
-    else musics.push(updated);
-    save(KEYS.musics, musics);
-    return updated;
-  }
-  const novo: DBMusic = {
-    ...data,
-    id: "m_" + uid().slice(0, 8),
-    createdAt: new Date().toISOString(),
-  } as DBMusic;
-  musics.push(novo);
-  save(KEYS.musics, musics);
-  return novo;
+export async function upsertMusic(data: Omit<DBMusic, "id" | "createdAt"> & { id?: string }): Promise<DBMusic> {
+  const row = fromMusic(data);
+  const r = data.id
+    ? ok(await supabase().from("musics").upsert(row).select().single())
+    : ok(await supabase().from("musics").insert(row).select().single());
+  notify();
+  return toMusic(r);
 }
 
-export function deleteMusic(id: string): void {
-  save(KEYS.musics, getMusics().filter(m => m.id !== id));
+export async function deleteMusic(id: string): Promise<void> {
+  ok(await supabase().from("musics").delete().eq("id", id));
+  notify();
 }
 
 // ─── BACKUP & RESTAURAÇÃO DE DADOS ──────────────────────────────────────────
 
-export function exportDatabaseBackup(): string {
+export async function exportDatabaseBackup(): Promise<string> {
+  const [members, books, musics, settings] = await Promise.all([
+    getMembers({ todos: true }),
+    getBooks({ todos: true }),
+    getMusics({ todos: true }),
+    getSettings(),
+  ]);
   const backup = {
-    version: "3.0",
+    version: "4.0",
     exportDate: new Date().toISOString(),
-    members: getMembers(),
-    books: getBooks(),
-    musics: getMusics(),
+    settings,
+    members,
+    books,
+    musics,
   };
   return JSON.stringify(backup, null, 2);
 }
 
-export function importDatabaseBackup(jsonString: string): { success: boolean; message: string } {
+/**
+ * Importa um backup (formato 3.0 do localStorage ou 4.0 do Supabase).
+ * Faz upsert por id: não apaga o que não está no arquivo e não mexe no vínculo de login.
+ */
+export async function importDatabaseBackup(jsonString: string): Promise<{ success: boolean; message: string }> {
   try {
     const data = JSON.parse(jsonString);
     if (!Array.isArray(data.members) || !Array.isArray(data.books)) {
       return { success: false, message: "Arquivo de backup inválido." };
     }
-    if (typeof window !== "undefined") {
-      localStorage.setItem(KEYS.members, JSON.stringify(data.members));
-      localStorage.setItem(KEYS.books, JSON.stringify(data.books));
-      if (Array.isArray(data.musics)) {
-        localStorage.setItem(KEYS.musics, JSON.stringify(data.musics));
-      }
-      notify();
+    const db = supabase();
+    const members = data.members as DBMember[];
+
+    ok(await db.from("members").upsert(members.map(fromMember)));
+
+    const payments = members.flatMap((m) =>
+      (m.pagamentos ?? []).map((p) => fromPayment({ ...p, id: undefined, memberId: m.id }))
+    );
+    if (payments.length > 0) {
+      ok(await db.from("payments").upsert(payments, { onConflict: "member_id,mes_referencia" }));
     }
-    return { success: true, message: `Backup importado com sucesso: ${data.members.length} membros e ${data.books.length} livros.` };
-  } catch (err: any) {
-    return { success: false, message: "Erro ao processar arquivo: " + err.message };
+
+    ok(await db.from("books").upsert((data.books as DBBook[]).map(fromBook)));
+    if (Array.isArray(data.musics) && data.musics.length > 0) {
+      ok(await db.from("musics").upsert((data.musics as DBMusic[]).map(fromMusic)));
+    }
+    if (data.settings) await updateSettings(data.settings);
+
+    notify();
+    return {
+      success: true,
+      message: `Backup importado com sucesso: ${members.length} membros e ${data.books.length} livros.`,
+    };
+  } catch (err) {
+    return { success: false, message: "Erro ao importar backup: " + (err instanceof Error ? err.message : String(err)) };
   }
 }
 
-export function resetToDefaultData(): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(KEYS.members, JSON.stringify(INITIAL_MEMBERS));
-  localStorage.setItem(KEYS.books, JSON.stringify(INITIAL_BOOKS));
-  localStorage.setItem(KEYS.musics, JSON.stringify(INITIAL_MUSICS));
-  notify();
+/** Só em desenvolvimento: regrava os dados iniciais de src/lib/seed.ts. */
+export async function resetToDefaultData(): Promise<{ success: boolean; message: string }> {
+  if (process.env.NODE_ENV !== "development") {
+    return { success: false, message: "Restaurar padrão só está disponível em desenvolvimento." };
+  }
+  const { INITIAL_MEMBERS, INITIAL_BOOKS, INITIAL_MUSICS } = await import("./seed");
+  return importDatabaseBackup(
+    JSON.stringify({ members: INITIAL_MEMBERS, books: INITIAL_BOOKS, musics: INITIAL_MUSICS })
+  );
 }
-

@@ -12,6 +12,8 @@ import {
   getMembers, upsertMember, createMember, deleteMember, generateNextMemberCode,
   type DBMember
 } from "@/lib/db";
+import { useDbSync } from "@/lib/useDbSync";
+import DbStatus from "@/components/DbStatus";
 
 type SortKey = "nome" | "status" | "cidade" | "dataRegistro" | "code";
 type SortDir = "asc" | "desc";
@@ -56,16 +58,9 @@ export default function DiretorAutores() {
     };
   }, [modal.open, deleteConfirm]);
 
-  function reload() {
-    setMembers(getMembers());
-  }
-
-  useEffect(() => {
-    reload();
-    const handleUpdate = () => reload();
-    window.addEventListener("academia_db_updated", handleUpdate);
-    return () => window.removeEventListener("academia_db_updated", handleUpdate);
-  }, []);
+  const { loading, error } = useDbSync(async () => {
+    setMembers(await getMembers({ todos: true }));
+  });
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -101,13 +96,16 @@ export default function DiretorAutores() {
   }, [filtered, sortKey, sortDir]);
 
   function lastPayment(m: DBMember): string {
-    const pago = (m.pagamentos ?? []).filter((p) => p.status === "pago").at(-1);
+    const pago = (m.pagamentos ?? [])
+      .filter((p) => p.status === "pago")
+      .sort((a, b) => a.mesReferencia.localeCompare(b.mesReferencia))
+      .at(-1);
     if (!pago) return "—";
     return pago.data;
   }
 
-  function openNew() {
-    const nextCode = generateNextMemberCode();
+  async function openNew() {
+    const nextCode = await generateNextMemberCode().catch(() => "");
     setModal({
       open: true,
       isNew: true,
@@ -122,29 +120,34 @@ export default function DiretorAutores() {
     setModal({ open: true, isNew: false, data: { ...m } });
   }
 
-  function handleSave() {
+  async function handleSave() {
     const d = modal.data;
     if (!d.nome?.trim()) {
       alert("Por favor, preencha o nome do integrante.");
       return;
     }
 
-    if (modal.isNew) {
-      createMember(d as any);
-    } else {
-      if (!d.id) return;
-      upsertMember(d as DBMember & { id: string });
+    try {
+      if (modal.isNew) {
+        await createMember(d as DBMember);
+      } else {
+        if (!d.id) return;
+        await upsertMember(d as DBMember & { id: string });
+      }
+      setModal({ open: false, isNew: false, data: {} });
+    } catch (e) {
+      alert("Não foi possível salvar: " + (e as Error).message);
     }
-
-    reload();
-    setModal({ open: false, isNew: false, data: {} });
   }
 
-  function handleDeleteConfirmed() {
+  async function handleDeleteConfirmed() {
     if (!deleteConfirm) return;
-    deleteMember(deleteConfirm.id);
-    reload();
-    setDeleteConfirm(null);
+    try {
+      await deleteMember(deleteConfirm.id);
+      setDeleteConfirm(null);
+    } catch (e) {
+      alert("Não foi possível excluir: " + (e as Error).message);
+    }
   }
 
   function setField<K extends keyof DBMember>(k: K, v: DBMember[K]) {
@@ -166,6 +169,7 @@ export default function DiretorAutores() {
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
+      <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
