@@ -139,7 +139,7 @@ export default function DiretorLivros() {
   const td = "px-4 py-4 text-base";
 
   return (
-    <div className="p-4 md:p-10">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
       <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">

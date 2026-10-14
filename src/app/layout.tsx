@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 import ScrollProgress from "@/components/ScrollProgress";
 import DemoBadge from "@/components/DemoBadge";
+import SiteChrome from "@/components/SiteChrome";
 
 export const metadata: Metadata = {
   title: "Acervo Next-Gen | Academia de Letras Barão do Rio Branco",
@@ -20,10 +21,12 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body className="antialiased min-h-screen flex flex-col font-sans">
         <SmoothScroll>
-          <ScrollProgress />
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
+          <SiteChrome
+            header={<><ScrollProgress /><Header /></>}
+            footer={<Footer />}
+          >
+            {children}
+          </SiteChrome>
         </SmoothScroll>
         <DemoBadge />
       </body>

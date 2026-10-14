@@ -101,7 +101,8 @@ export default function DiretorAutores() {
       .sort((a, b) => a.mesReferencia.localeCompare(b.mesReferencia))
       .at(-1);
     if (!pago) return "—";
-    return pago.data;
+    const [y, mo, d] = pago.data.slice(0, 10).split("-");
+    return `${d}/${mo}/${y}`;
   }
 
   async function openNew() {
@@ -185,7 +186,7 @@ export default function DiretorAutores() {
           className="flex items-center gap-2 bg-black text-white px-6 py-3.5 rounded-xl font-bold text-sm hover:bg-zinc-800 transition-colors shrink-0 shadow-sm"
         >
           <UserPlus className="w-5 h-5 text-accent" />
-          + Novo Integrante
+          Novo Integrante
         </button>
       </div>
 
@@ -235,8 +236,8 @@ export default function DiretorAutores() {
                 <th className={th} onClick={() => toggleSort("code")}>Código <SortIcon col="code" /></th>
                 <th className={th} onClick={() => toggleSort("nome")}>Nome do Imortal <SortIcon col="nome" /></th>
                 <th className="px-4 py-3 text-xs uppercase tracking-wider text-gray-500 font-bold text-left">Cadeira / Patrono</th>
-                <th className={th} onClick={() => toggleSort("cidade")}>Cidade <SortIcon col="cidade" /></th>
-                <th className="px-4 py-3 text-xs uppercase tracking-wider text-gray-500 font-bold text-left">Email</th>
+                <th className={`${th} hidden 2xl:table-cell`} onClick={() => toggleSort("cidade")}>Cidade <SortIcon col="cidade" /></th>
+                <th className="hidden 2xl:table-cell px-4 py-3 text-xs uppercase tracking-wider text-gray-500 font-bold text-left">Email</th>
                 <th className={th} onClick={() => toggleSort("status")}>Status <SortIcon col="status" /></th>
                 <th className="px-4 py-3 text-xs uppercase tracking-wider text-gray-500 font-bold text-left whitespace-nowrap">Últ. Pagamento</th>
                 <th className="px-4 py-3 text-xs uppercase tracking-wider text-gray-500 font-bold text-center">Ações</th>
@@ -277,8 +278,8 @@ export default function DiretorAutores() {
                   <td className={`${td} text-gray-600 max-w-[220px] truncate text-xs`}>
                     {m.cadeira || "—"}
                   </td>
-                  <td className={`${td} text-gray-600 text-xs`}>{m.cidade}</td>
-                  <td className={`${td} text-gray-500 text-xs max-w-[180px] truncate`}>{m.email}</td>
+                  <td className={`${td} hidden 2xl:table-cell text-gray-600 text-xs`}>{m.cidade}</td>
+                  <td className={`${td} hidden 2xl:table-cell text-gray-500 text-xs max-w-[180px] truncate`}>{m.email}</td>
                   <td className={td}>
                     <StatusBadge status={m.status} />
                   </td>

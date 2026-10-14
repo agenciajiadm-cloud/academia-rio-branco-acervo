@@ -64,7 +64,7 @@ export default function DiretorLayout({ children }: { children: React.ReactNode 
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {NAV.map(({ href, label, icon: Icon, badge }) => {
-            const active = pathname === href;
+            const active = pathname.replace(/\/$/, "") === href;
             return (
               <Link
                 key={href}
@@ -140,7 +140,7 @@ export default function DiretorLayout({ children }: { children: React.ReactNode 
                 href={href}
                 onClick={() => setMenuOpen(false)}
                 className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-base font-medium transition-colors ${
-                  pathname === href ? "bg-white/15 text-white font-bold" : "text-white/70 hover:bg-white/10"
+                  pathname.replace(/\/$/, "") === href ? "bg-white/15 text-white font-bold" : "text-white/70 hover:bg-white/10"
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -178,7 +178,7 @@ export default function DiretorLayout({ children }: { children: React.ReactNode 
       )}
 
       {/* ── Main content ────────────────────────────────────── */}
-      <main className="flex-1 md:ml-64 pt-16 md:pt-0 min-h-screen">
+      <main className="flex-1 min-w-0 md:ml-64 pt-16 md:pt-0 min-h-screen">
         {children}
       </main>
     </div>

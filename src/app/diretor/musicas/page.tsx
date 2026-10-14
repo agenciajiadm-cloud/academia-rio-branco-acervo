@@ -110,7 +110,7 @@ export default function DiretorMusicas() {
   const td = "px-4 py-4 text-base";
 
   return (
-    <div className="p-4 md:p-10">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
       <div className="mb-6 empty:hidden"><DbStatus loading={loading} error={error} /></div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
@@ -177,7 +177,7 @@ export default function DiretorMusicas() {
                     )}
                   </td>
                   <td className={`${td} text-gray-600 max-w-[180px] truncate`}>{memberName(m.memberId)}</td>
-                  <td className={td}><span className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full text-sm font-medium">{m.tipo}</span></td>
+                  <td className={td}><span className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full text-sm font-medium whitespace-nowrap">{m.tipo}</span></td>
                   <td className={`${td} text-gray-600`}>{platformLabel(m.plataforma)}</td>
                   <td className={td}><StatusBadge status={m.status} /></td>
                   <td className={td}>
@@ -220,7 +220,7 @@ export default function DiretorMusicas() {
               <p className="font-bold text-lg leading-tight text-black">{m.titulo}</p>
               <p className="text-gray-500 text-base mt-1">{memberName(m.memberId)}</p>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full text-sm font-medium">{m.tipo}</span>
+                <span className="bg-purple-50 text-purple-700 px-2.5 py-1 rounded-full text-sm font-medium whitespace-nowrap">{m.tipo}</span>
                 <StatusBadge status={m.status} />
               </div>
             </div>
