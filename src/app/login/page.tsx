@@ -19,7 +19,15 @@ export default function Login() {
     await new Promise((r) => setTimeout(r, 500));
 
     const normalized = code.trim().toUpperCase().startsWith("#") ? code.trim() : `#${code.trim()}`;
-    const member = await getMemberByCode(normalized).catch(() => null);
+    let member;
+    try {
+      member = await getMemberByCode(normalized);
+    } catch (err) {
+      console.error(err);
+      setError("Não foi possível conectar ao banco de dados. Tente novamente em instantes.");
+      setLoading(false);
+      return;
+    }
 
     if (!member) {
       setError("Código não encontrado. Verifique e tente novamente.");
