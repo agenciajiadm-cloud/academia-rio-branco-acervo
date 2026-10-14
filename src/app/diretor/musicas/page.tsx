@@ -38,10 +38,15 @@ export default function DiretorMusicas() {
 
   function reload() {
     setMusics(getMusics());
-    setMembers(getMembers() as DBMember[]);
+    setMembers(getMembers());
   }
 
-  useEffect(() => { reload(); }, []);
+  useEffect(() => {
+    reload();
+    const handleUpdate = () => reload();
+    window.addEventListener("academia_db_updated", handleUpdate);
+    return () => window.removeEventListener("academia_db_updated", handleUpdate);
+  }, []);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");

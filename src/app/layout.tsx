@@ -1,24 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SmoothScroll from "@/components/SmoothScroll";
 import ScrollProgress from "@/components/ScrollProgress";
 
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-serif",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Acervo Next-Gen | Academia de Letras",
-  description: "A Netflix dos Livros.",
+  title: "Acervo Next-Gen | Academia de Letras Barão do Rio Branco",
+  description: "A Netflix dos Livros — Preservando a Literatura Amazônida.",
 };
 
 export default function RootLayout({
@@ -28,9 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body
-        className={`${inter.variable} ${playfair.variable} antialiased min-h-screen flex flex-col`}
-      >
+      <body className="antialiased min-h-screen flex flex-col font-sans">
         <SmoothScroll>
           <ScrollProgress />
           <Header />
@@ -41,3 +28,4 @@ export default function RootLayout({
     </html>
   );
 }
+

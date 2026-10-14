@@ -38,10 +38,15 @@ export default function DiretorLivros() {
 
   function reload() {
     setBooks(getBooks());
-    setMembers(getMembers() as DBMember[]);
+    setMembers(getMembers());
   }
 
-  useEffect(() => { reload(); }, []);
+  useEffect(() => {
+    reload();
+    const handleUpdate = () => reload();
+    window.addEventListener("academia_db_updated", handleUpdate);
+    return () => window.removeEventListener("academia_db_updated", handleUpdate);
+  }, []);
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -343,8 +348,18 @@ export default function DiretorLivros() {
                 />
               </div>
 
-              {/* Gênero + Faixa Etária */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Preço + Gênero + Faixa Etária */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Preço Oficial (R$)</label>
+                  <input
+                    type="number"
+                    step="0.10"
+                    value={modal.data.preco ?? 49.9}
+                    onChange={e => setField("preco", parseFloat(e.target.value) || 0)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-black"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Gênero</label>
                   <select

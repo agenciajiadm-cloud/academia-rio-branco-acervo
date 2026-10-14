@@ -75,13 +75,14 @@ export default function AreaAssociado() {
   function openProfile() {
     if (!member) return;
     setProfileData({
-      id:        member.id,
-      nome:      member.nome,
-      titulacao: member.titulacao,
-      instagram: member.instagram,
-      cidade:    member.cidade,
-      foto:      (member as any).foto ?? "",
-      bio:       (member as any).bio  ?? "",
+      id:          member.id,
+      nome:        member.nome,
+      titulacao:   member.titulacao,
+      instagram:   member.instagram,
+      cidade:      member.cidade,
+      foto:        (member as any).foto ?? "",
+      bio:         (member as any).bio  ?? "",
+      fullHistory: (member as any).fullHistory ?? "",
     });
     setProfileOpen(true);
   }
@@ -389,13 +390,23 @@ export default function AreaAssociado() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Bio (resumida)</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Bio Resumida (exibida nos cards)</label>
                 <textarea
                   value={(profileData as any).bio ?? ""}
                   onChange={e => setPField("bio" as any, e.target.value)}
-                  rows={3}
+                  rows={2}
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-black resize-none"
-                  placeholder="Apresentação curta exibida no site…"
+                  placeholder="Apresentação curta em 1 ou 2 frases…"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Biografia Completa / Trajetória Histórica</label>
+                <textarea
+                  value={(profileData as any).fullHistory ?? ""}
+                  onChange={e => setPField("fullHistory" as any, e.target.value)}
+                  rows={4}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base outline-none focus:border-black"
+                  placeholder="Texto completo exibido na sua página individual de autor…"
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

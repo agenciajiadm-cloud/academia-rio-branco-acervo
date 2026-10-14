@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Mic, BookOpen, Users, MapPin, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { books, authors, musics } from "@/data/mock";
+import { getBooks, getMembers, getMusics, type DBBook, type DBMember, type DBMusic } from "@/lib/db";
 import BookCard from "@/components/BookCard";
 import AuthorCard from "@/components/AuthorCard";
 import RevealText from "@/components/RevealText";
@@ -52,6 +53,56 @@ function ImageReveal({ src, alt, className }: { src: string; alt: string; classN
 
 export default function Home() {
   const heroRef = useRef<HTMLElement>(null);
+
+  const [bookList, setBookList] = useState<any[]>(books);
+  const [authorList, setAuthorList] = useState<any[]>(authors);
+  const [musicList, setMusicList] = useState<any[]>(musics);
+
+  function syncData() {
+    const dbBooks = getBooks();
+    if (dbBooks.length > 0) {
+      setBookList(dbBooks.map(b => ({
+        id: b.id,
+        title: b.titulo,
+        subtitle: b.subtitulo,
+        price: b.preco || 49.9,
+        coverUrl: b.capaUrl || "/images/capa-forte.png",
+        authorId: b.memberId,
+        description: b.sinopse,
+      })));
+    }
+
+    const dbMembers = getMembers();
+    if (dbMembers.length > 0) {
+      setAuthorList(dbMembers.map(m => ({
+        id: m.id,
+        name: m.nome,
+        bio: m.bio || "",
+        fullHistory: m.fullHistory || "",
+        photoUrl: m.foto || "/imagens/policarpo-novo.jpg",
+        instagramHandle: m.instagram,
+        cidade: m.cidade,
+        cadeira: m.cadeira,
+      })));
+    }
+
+    const dbMusics = getMusics();
+    if (dbMusics.length > 0) {
+      setMusicList(dbMusics.map(m => ({
+        id: m.id,
+        title: m.titulo,
+        coverUrl: m.capaUrl || "/imagens/elaine-araujo.jpg",
+        authorId: m.memberId,
+      })));
+    }
+  }
+
+  useEffect(() => {
+    syncData();
+    const handleUpdate = () => syncData();
+    window.addEventListener("academia_db_updated", handleUpdate);
+    return () => window.removeEventListener("academia_db_updated", handleUpdate);
+  }, []);
 
   const { scrollYProgress: heroScroll } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroImgY = useTransform(heroScroll, [0, 1], ["0%", "25%"]);
@@ -231,7 +282,7 @@ export default function Home() {
           <p className="text-gray-500 mb-10">As obras publicadas pelos nossos Imortais associados.</p>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-            {books.map((book, i) => (
+            {bookList.map((book, i) => (
               <motion.div
                 key={book.id}
                 initial={{ opacity: 0, y: 40 }}
@@ -267,7 +318,7 @@ export default function Home() {
           <p className="text-gray-500 mb-10">As mentes que forjam nosso acervo.</p>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 md:gap-10">
-            {authors.map((author, i) => (
+            {authorList.map((author, i) => (
               <motion.div
                 key={author.id}
                 initial={{ opacity: 0, y: 40 }}
@@ -345,7 +396,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-5">
-            {musics.map((music, i) => (
+            {musicList.map((music, i) => (
               <motion.div
                 key={music.id}
                 className="group cursor-pointer"
