@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CreditCard, RefreshCw, Check, AlertCircle, Shield } from "lucide-react";
 import { getMemberByCode, activateMember, type Member } from "@/lib/members";
+import { isDemo } from "@/lib/supabase";
 
 const MENSALIDADE_VALOR = 49.9;
 
@@ -29,7 +30,7 @@ function MensalidadeContent() {
     setError("");
 
     try {
-      if (process.env.NODE_ENV === "development") {
+      if (process.env.NODE_ENV === "development" || isDemo()) {
         await activateMember(member.code);
         router.push("/area-associado");
         return;

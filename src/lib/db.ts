@@ -8,7 +8,7 @@
  * RLS permitir (rascunhos, pendentes, pagamentos).
  */
 
-import { supabase } from "./supabase";
+import { isDemo, supabase } from "./supabase";
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
 
@@ -570,9 +570,9 @@ export async function importDatabaseBackup(jsonString: string): Promise<{ succes
   }
 }
 
-/** Só em desenvolvimento: regrava os dados iniciais de src/lib/seed.ts. */
+/** Só em desenvolvimento ou no modo demonstração: regrava os dados iniciais de src/lib/seed.ts. */
 export async function resetToDefaultData(): Promise<{ success: boolean; message: string }> {
-  if (process.env.NODE_ENV !== "development") {
+  if (process.env.NODE_ENV !== "development" && !isDemo()) {
     return { success: false, message: "Restaurar padrão só está disponível em desenvolvimento." };
   }
   const { INITIAL_MEMBERS, INITIAL_BOOKS, INITIAL_MUSICS } = await import("./seed");

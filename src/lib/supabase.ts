@@ -6,9 +6,12 @@ let client: SupabaseClient | null = null;
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-/** Sem .env.local em `npm run dev`: usa dados de exemplo no navegador (src/lib/demo-db.ts). */
+/**
+ * Sem as variáveis do Supabase (em `npm run dev` ou no build publicado):
+ * usa dados de exemplo no navegador (src/lib/demo-db.ts).
+ */
 export function isDemo(): boolean {
-  return process.env.NODE_ENV === "development" && (!url || !key);
+  return !url || !key;
 }
 
 /**
